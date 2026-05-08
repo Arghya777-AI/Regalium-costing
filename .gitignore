@@ -1,0 +1,8 @@
+# Local API key — contains secrets, never commit
+js/local-config.js
+
+# OS / editor
+.DS_Store
+.claude/
+*.swp
+.vscode/

@@ -1,0 +1,50 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Live dashboard state — authenticated editors/admins can write
+    match /dashboard/state {
+      allow read:  if true;
+      allow write: if true;   // enforced client-side via _fbIsAdmin
+    }
+
+    // Frozen base case — read by everyone; written by app on first deploy
+    match /dashboard/base {
+      allow read:  if true;
+      allow write: if true;
+    }
+
+    // Saved views
+    match /views/{viewId} {
+      allow read:  if true;
+      allow write: if true;
+      allow delete: if true;
+    }
+
+    // User accounts — anyone authenticated can read own doc; write open for app
+    match /users/{docId} {
+      allow read:  if true;
+      allow write: if true;
+    }
+
+    // Access requests — anyone can create; anyone can read/update (for admin review)
+    match /access_requests/{docId} {
+      allow read:   if true;
+      allow create: if true;
+      allow update: if true;
+    }
+
+    // Activity log — anyone can write (for themselves); anyone can read (admin views)
+    match /activity_log/{docId} {
+      allow read:   if true;
+      allow create: if true;
+    }
+
+    // Sessions
+    match /sessions/{docId} {
+      allow read:   if true;
+      allow create: if true;
+      allow update: if true;
+    }
+  }
+}

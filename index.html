@@ -2,130 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Machani Regalium – Construction Cost Dashboard</title>
-<style>
-:root{--gold:#FFC000;--gold-light:#FFF2CC;--dark:#1a1a2e;--navy:#16213e;--accent:#0f3460;--card-bg:#ffffff;--border:#dee2e6;--text:#212529;--muted:#6c757d;--green:#1e7e34;--red:#c0392b;--header-fill:#D8D8D8;--row-alt:#f8f9fa}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Arial,Helvetica,sans-serif;background:#f0f2f5;color:var(--text);font-size:13px}
-.top-bar{background:var(--dark);color:#fff;padding:0 24px;display:flex;align-items:center;height:52px;gap:16px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.4)}
-.top-bar .logo{display:flex;align-items:center;gap:10px}
-.top-bar .logo-icon{width:32px;height:32px;background:var(--gold);border-radius:6px;display:grid;place-items:center;font-weight:900;font-size:16px;color:var(--dark)}
-.top-bar .title{font-size:17px;font-weight:700;letter-spacing:.4px}
-.top-bar .subtitle{font-size:11px;color:#adb5bd;letter-spacing:.5px}
-.top-bar .meta{margin-left:auto;font-size:11px;color:#adb5bd}
-.tabs-wrap{background:var(--navy);padding:0 24px;overflow-x:auto;display:flex;gap:0;white-space:nowrap}
-.tabs-wrap::-webkit-scrollbar{height:4px}
-.tabs-wrap::-webkit-scrollbar-thumb{background:var(--gold);border-radius:2px}
-.tab-btn{padding:10px 16px;border:none;background:none;color:#adb5bd;cursor:pointer;font-size:12px;font-family:Arial,sans-serif;border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap}
-.tab-btn:hover{color:#fff;background:rgba(255,255,255,.05)}
-.tab-btn.active{color:var(--gold);border-bottom-color:var(--gold);font-weight:700}
-.content{padding:20px 24px;max-width:1600px;margin:0 auto}
-.tab-panel{display:none}
-.tab-panel.active{display:block}
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px}
-.kpi-card{background:var(--card-bg);border-radius:10px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.08);border-left:4px solid var(--gold)}
-.kpi-card .label{font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:6px}
-.kpi-card .value{font-size:24px;font-weight:700;color:var(--dark);line-height:1}
-.kpi-card .unit{font-size:11px;color:var(--muted);margin-top:4px}
-.kpi-card.green{border-left-color:#28a745}
-.kpi-card.red{border-left-color:var(--red)}
-.kpi-card.blue{border-left-color:#007bff}
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
-.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px}
-@media(max-width:1100px){.two-col{grid-template-columns:1fr}.three-col{grid-template-columns:1fr 1fr}}
-@media(max-width:700px){.three-col{grid-template-columns:1fr}}
-.card{background:var(--card-bg);border-radius:10px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:20px}
-.card-title{font-size:13px;font-weight:700;color:var(--dark);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.chart-box{position:relative;height:260px}
-.tbl-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:12px}
-thead th{background:var(--gold);color:var(--dark);padding:8px 10px;text-align:center;font-weight:700;white-space:nowrap;position:sticky;top:0;z-index:2;border:1px solid #d4a017}
-tbody tr:nth-child(even){background:var(--row-alt)}
-tbody tr:hover{background:#fff3cd40}
-tbody td{padding:7px 10px;border:1px solid #e9ecef;vertical-align:middle}
-tbody tr.total-row td{background:var(--gold-light)!important;font-weight:700;border-top:2px solid var(--gold)}
-tbody tr.sub-header td{background:var(--header-fill);font-weight:700;border:1px solid #bbb}
-tbody tr.group-header td{background:#e8f4f8;font-weight:700}
-.num{text-align:right;font-variant-numeric:tabular-nums}
-.ctr{text-align:center}
-.diff-pos{color:var(--green);font-weight:600}
-.diff-neg{color:var(--red);font-weight:600}
-.diff-zero{color:var(--muted)}
-.note-cell{font-size:10px;color:var(--muted);font-style:italic;padding:2px 10px 4px;border:none!important;background:transparent!important}
-.badge-pill{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600}
-.pill-awarded{background:#d4edda;color:#155724}
-.pill-progress{background:#fff3cd;color:#856404}
-.pill-pending{background:#f8d7da;color:#721c24}
-.pink-row td{background:#fce4ec!important}
-.committed-sep{background:#1565c0!important}
-.committed-sep td{background:#1565c0!important;color:white!important;font-weight:700;font-size:12px;padding:7px 10px}
-.mep-section td{background:var(--header-fill)!important;font-weight:700}
-.mep-sub td{padding-left:22px!important}
-.info-bar{background:var(--gold-light);border:1px solid var(--gold);border-radius:6px;padding:8px 14px;margin-bottom:14px;font-size:12px;color:#7d5a00;display:flex;align-items:center;gap:8px}
-.info-bar::before{content:"ℹ";font-weight:700}
-.tall-tbl .tbl-wrap{max-height:520px;overflow-y:auto}
-.tall-tbl .tbl-wrap::-webkit-scrollbar{width:6px}
-.tall-tbl .tbl-wrap::-webkit-scrollbar-thumb{background:var(--gold);border-radius:3px}
-/* EDITABLE CELLS */
-td.ed{cursor:pointer;position:relative}
-td.ed:hover{background:#fffde7!important;outline:2px solid #ffc000;outline-offset:-2px}
-td.ed:hover::after{content:"✎";position:absolute;top:2px;right:3px;font-size:9px;color:#d4a017;opacity:.8}
-.ed-input{width:100%;border:2px solid var(--gold);padding:3px 6px;font:inherit;font-size:12px;background:#fffde7;text-align:right;border-radius:3px;outline:none;box-shadow:0 0 0 3px rgba(255,192,0,.2)}
-.ed-input.str{text-align:left}
-td.derived{color:#1565c0;font-style:italic}
-td.derived::after{content:" ƒ";font-size:9px;color:#90caf9}
-/* CASCADE MODAL */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;display:flex;align-items:center;justify-content:center}
-.modal-box{background:#fff;border-radius:14px;padding:28px 32px;max-width:480px;width:92%;box-shadow:0 12px 48px rgba(0,0,0,.3)}
-.modal-box h3{font-size:16px;font-weight:700;margin-bottom:8px;color:var(--dark)}
-.modal-box .modal-desc{font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6}
-.modal-vals{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px}
-.modal-val{background:#f8f9fa;padding:10px 12px;border-radius:8px;text-align:center}
-.modal-val .mv-label{font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px}
-.modal-val .mv-num{font-size:15px;font-weight:700;color:var(--dark)}
-.modal-val .mv-num.changed{color:#e65100}
-.modal-actions{display:flex;flex-wrap:wrap;gap:8px}
-.mbtn{flex:1;min-width:90px;padding:10px 12px;border-radius:8px;border:none;cursor:pointer;font-size:12px;font-weight:700;transition:all .15s}
-.mbtn:hover{filter:brightness(1.08);transform:translateY(-1px)}
-.mbtn-rate{background:var(--gold);color:var(--dark)}
-.mbtn-qty{background:#0d6efd;color:#fff}
-.mbtn-both{background:#28a745;color:#fff}
-.mbtn-override{background:#e9ecef;color:var(--dark)}
-.mbtn-cancel{background:transparent;color:var(--muted);border:1px solid var(--border)}
-/* DATA STUDIO */
-.ds-btn{background:var(--gold);color:var(--dark);border:none;padding:7px 16px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s;flex-shrink:0}
-.ds-btn:hover{background:#e6ac00;transform:translateY(-1px)}
-.ds-panel{position:fixed;right:0;top:0;width:420px;height:100vh;background:#fff;z-index:200;box-shadow:-6px 0 32px rgba(0,0,0,.2);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1)}
-.ds-panel.open{transform:translateX(0)}
-.ds-overlay{position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:199;display:none}
-.ds-overlay.open{display:block}
-.ds-hdr{background:var(--dark);color:#fff;padding:16px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0}
-.ds-hdr h2{font-size:15px;font-weight:700;flex:1;letter-spacing:.3px}
-.ds-close{background:none;border:none;color:#adb5bd;font-size:22px;cursor:pointer;padding:0 4px;line-height:1}
-.ds-close:hover{color:#fff}
-.ds-search{padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
-.ds-search input{width:100%;padding:9px 14px;border:1px solid var(--border);border-radius:8px;font-size:12px;outline:none}
-.ds-search input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(255,192,0,.15)}
-.ds-body{flex:1;overflow-y:auto}
-.ds-body::-webkit-scrollbar{width:5px}
-.ds-body::-webkit-scrollbar-thumb{background:var(--gold);border-radius:3px}
-.ds-sec{border-bottom:1px solid #eee}
-.ds-sec-hdr{padding:11px 16px;font-size:12px;font-weight:700;color:var(--dark);background:var(--row-alt);cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none}
-.ds-sec-hdr:hover{background:#e9ecef}
-.ds-arrow{font-size:10px;color:var(--muted);transition:transform .2s}
-.ds-sec-hdr.open .ds-arrow{transform:rotate(90deg)}
-.ds-sec-body{display:none}
-.ds-sec-body.open{display:block}
-.ds-field{display:flex;align-items:center;padding:6px 16px;border-bottom:1px solid #f5f5f5;gap:8px;min-height:36px}
-.ds-field:hover{background:#fffde7}
-.ds-field.ds-hidden{display:none}
-.ds-f-label{flex:1;font-size:11px;color:#444;line-height:1.3}
-.ds-f-path{font-size:9px;color:#bbb;display:block}
-.ds-field input{width:130px;border:1px solid var(--border);border-radius:4px;padding:4px 8px;font-size:12px;text-align:right;flex-shrink:0}
-.ds-field input[type=text]{text-align:left;width:180px}
-.ds-field input:focus{border-color:var(--gold);outline:none;background:#fffde7}
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Regalium">
+<meta name="theme-color" content="#1a1a2e">
+<meta name="description" content="Machani Regalium Construction Cost Dashboard">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon.svg">
+<title>Regalium – Construction Cost Dashboard</title>
+<link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
@@ -134,29 +21,77 @@ td.derived::after{content:" ƒ";font-size:9px;color:#90caf9}
   <div class="logo">
     <div class="logo-icon">M</div>
     <div>
-      <div class="title" id="proj-name">Machani Regalium</div>
+      <div class="title" id="proj-name">Regalium</div>
       <div class="subtitle" id="proj-subtitle">CONSTRUCTION COST DASHBOARD</div>
     </div>
   </div>
   <div class="meta" id="proj-meta">As at 30 Dec 2025 &nbsp;|&nbsp; All amounts in INR Crores unless noted</div>
+  <div class="tb-credit">by Arghya's Olama AGT</div>
+  <!-- AI Key kept hidden for AI features; no UI exposed -->
+  <div id="api-key-wrap" style="display:none">
+    <input type="password" id="api-key-input" autocomplete="off" oninput="apiKeyLiveSet(this.value)">
+    <span id="api-key-dot" class="api-dot unset"></span>
+  </div>
+  <!-- Firebase Views & Status -->
+  <div class="fb-views-wrap" id="fb-views-wrap">
+    <button class="fb-views-btn" onclick="fbToggleViewsPanel()">
+      <span id="fb-status-dot" style="color:#94a3b8">◌</span>
+      <span id="fb-status-txt">Connecting…</span>
+      &nbsp;·&nbsp; Views
+    </button>
+    <div id="fb-views-panel" class="fb-views-panel" style="display:none">
+      <div class="fb-views-header">Saved Views</div>
+      <div id="fb-views-list" class="fb-views-list"><div class="fb-no-views">Loading…</div></div>
+      <div class="fb-views-save-row">
+        <input id="fb-view-name-input" class="fb-view-input" type="text" placeholder="View name (optional)" maxlength="60"
+               onkeydown="if(event.key==='Enter')fbHandleSaveView()">
+        <button class="fb-save-btn" onclick="fbHandleSaveView()">Save Current</button>
+      </div>
+    </div>
+  </div>
+
+  <button class="fb-reset-btn" onclick="fbResetToBase()" title="Reset all data to original base case">↺ Reset</button>
   <button class="ds-btn" onclick="openDS()">⚙ Data Studio</button>
+
+  <!-- Admin panel trigger — only visible for admin role -->
+  <button id="am-admin-btn" class="am-admin-btn" onclick="apOpen()" title="Admin Panel" style="display:none">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17 11c.34 0 .67.03 1 .08V6.27L10 3 3 6.27V11c0 4.52 2.98 8.69 7 9.93.97-.28 1.88-.72 2.72-1.28A6.95 6.95 0 0 1 12 18a7 7 0 0 1 5-6.72V11h0z"/><circle cx="17.5" cy="17.5" r="4.5" fill="#22c55e"/><path d="M16.5 19.5l-1.5-1.5 1-1 .5.5 2-2 1 1-3 3z" fill="#fff"/></svg>
+    Admin Panel
+  </button>
+
+  <!-- Signed-in user chip (desktop) -->
+  <div id="am-user-chip" class="am-user-chip" style="display:none"></div>
+
+  <!-- Mobile hamburger — replaces all buttons on small screens -->
+  <button class="mob-menu-btn" onclick="mobileMenuOpen()" title="Menu" aria-label="Open menu">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+  </button>
+</div>
+
+<!-- Firebase loading overlay — hidden after first Firestore snapshot -->
+<div id="fb-loading-overlay">
+  <div class="fb-spinner"></div>
+  <div class="fb-loading-text">Connecting to live data…</div>
 </div>
 
 <!-- TABS -->
 <div class="tabs-wrap">
-  <button class="tab-btn active"  onclick="showTab('overview',this)">Overall Summary</button>
-  <button class="tab-btn" onclick="showTab('summary2',this)">Summary (2)</button>
-  <button class="tab-btn" onclick="showTab('summary3',this)">Summary (3)</button>
-  <button class="tab-btn" onclick="showTab('mep',this)">MEP Costplan</button>
-  <button class="tab-btn" onclick="showTab('mepf',this)">MEPF</button>
-  <button class="tab-btn" onclick="showTab('facade',this)">Façade</button>
-  <button class="tab-btn" onclick="showTab('finishes',this)">Finishes</button>
-  <button class="tab-btn" onclick="showTab('elevators',this)">Elevators</button>
-  <button class="tab-btn" onclick="showTab('parking',this)">Parking</button>
-  <button class="tab-btn" onclick="showTab('landscape',this)">Landscape</button>
-  <button class="tab-btn" onclick="showTab('lighting',this)">Lighting</button>
-  <button class="tab-btn" onclick="showTab('signages',this)">Signages</button>
-  <button class="tab-btn" onclick="showTab('consultant',this)">Consultant</button>
+  <button class="tab-btn active" data-tab-id="overview"   onclick="showTab('overview',this)">Overall Summary</button>
+  <button class="tab-btn"        data-tab-id="summary2"   onclick="showTab('summary2',this)">Summary (2)</button>
+  <button class="tab-btn"        data-tab-id="summary3"   onclick="showTab('summary3',this)">Summary (3)</button>
+  <button class="tab-btn"        data-tab-id="mep"        onclick="showTab('mep',this)">MEP Costplan</button>
+  <button class="tab-btn"        data-tab-id="mepf"       onclick="showTab('mepf',this)">MEPF</button>
+  <button class="tab-btn"        data-tab-id="facade"     onclick="showTab('facade',this)">Façade</button>
+  <button class="tab-btn"        data-tab-id="finishes"   onclick="showTab('finishes',this)">Finishes</button>
+  <button class="tab-btn"        data-tab-id="elevators"  onclick="showTab('elevators',this)">Elevators</button>
+  <button class="tab-btn"        data-tab-id="parking"    onclick="showTab('parking',this)">Parking</button>
+  <button class="tab-btn"        data-tab-id="landscape"  onclick="showTab('landscape',this)">Landscape</button>
+  <button class="tab-btn"        data-tab-id="lighting"   onclick="showTab('lighting',this)">Lighting</button>
+  <button class="tab-btn"        data-tab-id="signages"   onclick="showTab('signages',this)">Signages</button>
+  <button class="tab-btn"        data-tab-id="consultant" onclick="showTab('consultant',this)">Consultant</button>
+  <button class="tab-btn"        data-tab-id="smartsheet" onclick="showTab('smartsheet',this);renderSmartSheet()">✨ Smart Sheet</button>
+  <button id="tui-hidden-tabs-btn" class="tab-btn tui-special" style="display:none" onclick="tuiOpenTabVisDialog()" title="Manage tab visibility"></button>
+  <button id="tui-add-tab-btn"     class="tab-btn tui-special tui-plus-btn" onclick="tuiCreateTab()" title="Create new tab">＋ New Tab</button>
 </div>
 
 <div class="content">
@@ -173,7 +108,7 @@ td.derived::after{content:" ƒ";font-size:9px;color:#90caf9}
     <div class="kpi-card"><div class="label">Labour Cess</div><div class="value">0.5%</div><div class="unit">statutory</div></div>
   </div>
   <div class="card" style="margin-bottom:20px">
-    <div class="card-title">OVERALL COST SUMMARY — MACHANI REGALIUM <span style="background:#0f3460;color:#fff;font-size:10px;padding:3px 8px;border-radius:4px;">Amounts in Crores (₹ Cr)</span></div>
+    <div class="card-title">OVERALL COST SUMMARY — REGALIUM <span style="background:#0f3460;color:#fff;font-size:10px;padding:3px 8px;border-radius:4px;">Amounts in Crores (₹ Cr)</span></div>
     <div class="tbl-wrap">
       <table><thead><tr><th style="width:40px">S No</th><th style="text-align:left;min-width:260px">COST GROUPS</th><th>INITIAL</th><th>CURRENT AMOUNT</th><th>DIFFERENCE</th><th>EXPECTED AMOUNT</th></tr></thead>
       <tbody id="tbl-overall-body"></tbody></table>
@@ -396,6 +331,30 @@ td.derived::after{content:" ƒ";font-size:9px;color:#90caf9}
   </div>
 </div>
 
+<!-- ██ SMART SHEET ██ -->
+<div id="tab-smartsheet" class="tab-panel">
+  <!-- AI Formula Assistant bar -->
+  <div class="ss-ai-card">
+    <div class="ss-ai-header">
+      <span class="ss-ai-title">✨ AI Formula Assistant</span>
+      <span id="ss-ai-cell-label" class="ss-ai-cell-label">Click any cell below to target it</span>
+      <button class="ss-settings-gear" onclick="ssOpenSettings()" title="API Key Settings">⚙</button>
+    </div>
+    <div class="ss-ai-row">
+      <input class="ss-ai-inp" id="ss-ai-input" placeholder='Describe what to calculate… e.g. "multiply qty by rate then add 18% GST"'>
+      <button class="ss-voice-btn" id="ss-voice-btn" onclick="ssStartVoice()" title="Voice input (Chrome/Edge)">🎤 Voice</button>
+      <button class="ss-ai-gen-btn" onclick="ssAskAI()">Generate ✨</button>
+    </div>
+    <div class="ss-ai-result-row" id="ss-ai-result-row" style="display:none">
+      <code class="ss-ai-result-code" id="ss-ai-result-text"></code>
+      <button class="ss-ai-apply-btn" id="ss-ai-apply" onclick="ssApplyAIFormula()" style="display:none">Apply to Cell</button>
+      <button class="ss-ai-copy-btn" onclick="ssAICopy()">Copy</button>
+    </div>
+  </div>
+  <!-- Tables rendered here by renderSmartSheet() -->
+  <div id="ss-tables"></div>
+</div>
+
 </div><!-- /content -->
 
 <!-- CASCADE DIALOG -->
@@ -429,1051 +388,157 @@ td.derived::after{content:" ƒ";font-size:9px;color:#90caf9}
   <div class="ds-body" id="ds-body"></div>
 </div>
 
+<!-- SMART SHEET SETTINGS -->
+<div id="ss-settings-overlay" class="ss-settings-overlay" style="display:none">
+  <div class="ss-settings-box">
+    <h3>⚙ AI Formula Settings</h3>
+    <p class="ss-settings-desc">Enter your Anthropic API key to enable AI formula generation. The key is stored only in memory and never sent anywhere except Anthropic's API.</p>
+    <div class="ss-key-warn">⚠ Your API key is visible in browser memory. Only use this on a trusted device.</div>
+    <label>Anthropic API Key</label>
+    <input type="password" id="ss-api-key" placeholder="sk-ant-…">
+    <div class="ss-settings-btns">
+      <button class="ss-cancel-btn" onclick="document.getElementById('ss-settings-overlay').style.display='none'">Cancel</button>
+      <button class="ss-save-btn" onclick="ssSaveSettings()">Save Key</button>
+    </div>
+  </div>
+</div>
+
+<!-- FORMULA TIP (cell address badge + fx button on hover) -->
+<div id="formula-tip" class="formula-tip" style="display:none">
+  <span id="formula-tip-addr" class="ft-addr">A1</span>
+  <button id="formula-tip-fx" class="ft-fx-btn" onclick="openFormulaPanel(_tipTarget)" title="Open formula editor">fx</button>
+</div>
+
+<!-- FORMULA PANEL -->
+<div id="formula-panel" class="formula-panel" style="display:none">
+  <div class="fp-header">
+    <span class="fp-title">Formula — Cell <strong id="fp-cell-addr">A1</strong><span id="fp-table-name" class="fp-tbl-name"></span></span>
+    <button class="fp-close-btn" onclick="closeFormulaPanel()" title="Close (Esc)">✕</button>
+  </div>
+  <div class="fp-modes">
+    <button id="fp-mode-formula" class="fp-mode-btn active" onclick="fpSetMode('formula')">= Formula</button>
+    <button id="fp-mode-ai"      class="fp-mode-btn"        onclick="fpSetMode('ai')">✨ Ask AI</button>
+  </div>
+
+  <!-- Formula input area -->
+  <div id="fp-formula-area">
+    <div class="fp-input-wrap">
+      <span class="fp-eq">=</span>
+      <textarea id="fp-formula-input" class="fp-textarea"
+        placeholder="A1+B1   or   SUM(B2:B8)   or   C3*D3/100" rows="2"></textarea>
+    </div>
+    <div class="fp-picker-row">
+      <button class="fp-picker-btn" id="fp-picker-btn" onclick="fpTogglePicker()">
+        <span id="fp-picker-icon">⊕</span> Click cells to insert address
+      </button>
+      <span class="fp-picker-hint" id="fp-picker-hint" style="display:none">Click any cell to insert its address · Esc or Apply to finish</span>
+      <span class="fp-range-label" id="fp-range-label" style="display:none"></span>
+    </div>
+  </div>
+
+  <!-- AI input area -->
+  <div id="fp-ai-area" style="display:none">
+    <div id="fp-key-row" class="fp-key-row" style="display:none">
+      <span class="fp-key-lbl">API Key</span>
+      <input type="password" id="fp-key-inline" class="fp-key-inline" placeholder="sk-ant-api03-…"
+             oninput="apiKeyLiveSet(this.value)" onkeydown="if(event.key==='Enter')this.blur()">
+      <a class="fp-key-link" href="https://console.anthropic.com/settings/keys" target="_blank" title="Get key from Anthropic Console">Get key ↗</a>
+    </div>
+    <textarea id="fp-ai-input" class="fp-textarea ai"
+      placeholder='Describe what you want: "Sum all values in column B rows 2–10" or "C3 × D3 plus 18% GST"' rows="3"></textarea>
+    <button class="fp-ai-gen-btn" onclick="fpAskAI()">✨ Generate Formula</button>
+    <div id="fp-ai-result" class="fp-ai-result" style="display:none"></div>
+  </div>
+
+  <div class="fp-footer">
+    <div id="fp-preview" class="fp-preview"></div>
+    <div class="fp-btns">
+      <button class="fp-btn cancel" onclick="closeFormulaPanel()">Cancel</button>
+      <button class="fp-btn clear"  onclick="fpClear()">Clear</button>
+      <button class="fp-btn apply"  onclick="fpApply()">✓ Apply</button>
+    </div>
+  </div>
+</div>
+
+<!-- KEYBOARD HELP OVERLAY (F1) -->
+<div id="kb-help-overlay" class="kb-help-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="kb-help-box">
+    <div class="kb-help-header">
+      <span>⌨ Keyboard Shortcuts</span>
+      <button onclick="document.getElementById('kb-help-overlay').style.display='none'">✕</button>
+    </div>
+    <div class="kb-help-cols">
+      <div class="kb-help-section">
+        <div class="kb-help-title">Navigation</div>
+        <div class="kb-help-row"><kbd>Arrow Keys</kbd><span>Move cell selection</span></div>
+        <div class="kb-help-row"><kbd>Ctrl + Arrow</kbd><span>Jump to edge</span></div>
+        <div class="kb-help-row"><kbd>Tab</kbd><span>Move right (wraps)</span></div>
+        <div class="kb-help-row"><kbd>Shift + Tab</kbd><span>Move left (wraps)</span></div>
+        <div class="kb-help-row"><kbd>Home</kbd><span>First cell in row</span></div>
+        <div class="kb-help-row"><kbd>End</kbd><span>Last cell in row</span></div>
+        <div class="kb-help-row"><kbd>Ctrl + Home</kbd><span>First cell in table</span></div>
+        <div class="kb-help-row"><kbd>Ctrl + End</kbd><span>Last cell in table</span></div>
+        <div class="kb-help-row"><kbd>Page Down</kbd><span>Move 10 rows down</span></div>
+        <div class="kb-help-row"><kbd>Page Up</kbd><span>Move 10 rows up</span></div>
+      </div>
+      <div class="kb-help-section">
+        <div class="kb-help-title">Editing</div>
+        <div class="kb-help-row"><kbd>Enter</kbd> / <kbd>F2</kbd><span>Edit selected cell</span></div>
+        <div class="kb-help-row"><kbd>Type any char</kbd><span>Start editing (replaces)</span></div>
+        <div class="kb-help-row"><kbd>Delete</kbd> / <kbd>Backspace</kbd><span>Clear cell value</span></div>
+        <div class="kb-help-row"><kbd>Escape</kbd><span>Deselect cell</span></div>
+        <div class="kb-help-title" style="margin-top:12px">Clipboard</div>
+        <div class="kb-help-row"><kbd>Ctrl + C</kbd><span>Copy cell</span></div>
+        <div class="kb-help-row"><kbd>Ctrl + Shift + C</kbd><span>Copy full row (TSV)</span></div>
+        <div class="kb-help-row"><kbd>Ctrl + V</kbd><span>Paste into cell</span></div>
+        <div class="kb-help-title" style="margin-top:12px">Rows &amp; Columns</div>
+        <div class="kb-help-row"><kbd>Insert</kbd><span>Insert row below</span></div>
+        <div class="kb-help-row"><kbd>Ctrl + +</kbd><span>Insert row below</span></div>
+        <div class="kb-help-row"><kbd>Ctrl + -</kbd><span>Delete row</span></div>
+        <div class="kb-help-row"><kbd>Ctrl + Shift + H</kbd><span>Hide row</span></div>
+        <div class="kb-help-row"><kbd>Ctrl + Shift + J</kbd><span>Hide column</span></div>
+      </div>
+    </div>
+    <div class="kb-help-footer">Right-click any cell or header for the full context menu &nbsp;·&nbsp; Press <kbd>F1</kbd> to close</div>
+  </div>
+</div>
+
+<!-- Firebase SDK (compat mode) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script>
-const D = {
-  project: { name:'Machani Regalium', subtitle:'CONSTRUCTION COST DASHBOARD', asAtDate:'30 Dec 2025' },
-  os: {
-    rows: [
-      {sno:1,  label:'EXCAVATION, SHORING & CIVIL WORKS',          init:308.2, curDirect:283.0,        expFixed:null},
-      {sno:2,  label:'INTERIOR & COMMON AREA FINISHING WORK',       init:76.8,  curDirect:null,         expFixed:95},
-      {sno:3,  label:'LIGHTING',                                    init:14.4,  curDirect:null,         expFixed:14.4},
-      {sno:4,  label:'FAÇADE WORK',                                 init:66.5,  curDirect:null,         expFixed:84.5},
-      {sno:5,  label:'MEPF/SERVICES WORK',                          init:96.2,  curDirect:null,         expFixed:null},
-      {sno:6,  label:'ELEVATORS',                                   init:17.6,  curDirect:null,         expFixed:null},
-      {sno:7,  label:'PARKING',                                     init:12.4,  curDirect:null,         expFixed:null},
-      {sno:8,  label:'SMART BUILDING SYSTEM',                       init:13.3,  curDirect:13.2875279,   expFixed:null},
-      {sno:9,  label:'EXTERNAL DEVELOPMENT / LANDSCAPE',            init:22.4,  curDirect:null,         expFixed:null},
-      {sno:10, label:'SIGNAGES',                                    init:3.6,   curDirect:null,         expFixed:5},
-      {sno:11, label:'FIRE DOORS',                                  init:null,  curDirect:2.4,          expFixed:2.4},
-      {sno:12, label:'RETAIL & OFFICE SHOPFRONT',                   init:null,  curDirect:null,         expFixed:2},
-      {sno:13, label:'CONSULTANT',                                  init:32.1,  curDirect:null,         expFixed:null},
-    ],
-    contingencyInit:15.8, labourInit:3.2
-  },
-  facade: {
-    rows: [
-      {sno:'1',   type:'FT-01',    desc:'Façade System (Typical floors, Unitised CW)',        qty:8195.73, rate:10859.26},
-      {sno:'1.2', type:'FT-01',    desc:'Vision Glass V-1A & V-1A(C) — DGU 6mm HS',           qty:4444.20, rate:3187},
-      {sno:'1.3', type:'FT-01',    desc:'Vision Glass – Openable panels V-1A(O)',              qty:343.20,  rate:9384},
-      {sno:'1.4', type:'FT-01',    desc:'Vision Glass V-1B (Curved)',                          qty:112.80,  rate:8120},
-      {sno:'1.5', type:'FT-01',    desc:'Spandrel Glass S-1A & S-1A(C)',                       qty:793.47,  rate:1489},
-      {sno:'1.6', type:'FT-01',    desc:'Spandrel Glass S-1B (Curved)',                        qty:15.44,   rate:3794},
-      {sno:'1.7', type:'FT-01',    desc:'Shadow Box behind Spandrel Glass',                    qty:808.60,  rate:5590},
-      {sno:'1.8', type:'FT-01A/D', desc:'Shadow Box behind GRC Spandrel & Fin',               qty:2486.93, rate:5240},
-      {sno:'1.9', type:'FT-01',    desc:'Back Panel (2mm GI)',                                 qty:3295.53, rate:2292},
-      {sno:'2',   type:'FT-01E',   desc:'Façade System (8th & 9th floor)',                     qty:1982.44, rate:10910.75},
-      {sno:'2.2', type:'FT-01E',   desc:'Vision Glass V-2A & V-2B',                           qty:1075.09, rate:3187},
-      {sno:'2.3', type:'FT-01E',   desc:'Vision Glass – Openable V-2A(O) & V-2B(O)',          qty:87.19,   rate:9109},
-      {sno:'2.4', type:'FT-01E',   desc:'Spandrel Glass S-2A & S-2B',                         qty:348.77,  rate:1489},
-      {sno:'2.5', type:'FT-01E',   desc:'Shadow Box behind Spandrel Glass',                    qty:348.77,  rate:5590},
-      {sno:'3',   type:'FT-02',    desc:'Façade System (8th & 9th NW, Double Storey CW)',      qty:848.18,  rate:11125.05},
-      {sno:'3.2', type:'FT-02A',   desc:'Vision Glass V-2E & V-2F',                           qty:509.00,  rate:3187},
-    ],
-    remaining:641244454.33
-  },
-  parking: {
-    rows: [
-      {sno:'1.1a', label:'Puzzle 2-Level (Type 02B) — 5 Grid / 9 Modules', unit:'Spaces', qty:243,  rate:130000},
-      {sno:'1.1b', label:'Puzzle 2-Level (Type 02B) — 3 Grid / 5 Modules', unit:'Spaces', qty:10,   rate:130000},
-      {sno:'2.1',  label:'Stack 2-Level (Type 02A, 2.0T) — B1',            unit:'Spaces', qty:166,  rate:55500},
-      {sno:'2.1a', label:'Stack 2-Level (Type 02B, 2.0T) — B2 & B3',       unit:'Spaces', qty:690,  rate:55500},
-    ],
-    gstRate:0.18
-  },
-  landscape: {
-    groups: [
-      {key:'A', label:'Road Works',                  amt:24807500.62},
-      {key:'B', label:'Compound Wall Works',          amt:25000000},
-      {key:'C', label:'External Landscape Works',     amt:41208000},
-      {key:'D', label:'Internal Landscape Works',     amt:9969287.50},
-      {key:'E', label:'Balcony/Deck Landscape Works', amt:24930000},
-    ],
-    details: [
-      {sno:'A.1', label:'Drive Way – Paver blocks',                                unit:'Sqm', qty:2878,  rate:2137.14},
-      {sno:'A.2', label:'Granite stone – Drive Way Dropoff Area',                  unit:'Sqm', qty:2710,  rate:5100},
-      {sno:'A.3', label:'Granite stone – Pathway Main Entrance',                   unit:'Sqm', qty:442,   rate:5100},
-      {sno:'A.4', label:'Paver block – Pathway',                                   unit:'Sqm', qty:455,   rate:2137.14},
-      {sno:'A.5', label:'Kerb stone',                                              unit:'Rmt', qty:1185,  rate:1200},
-      {sno:'A.6', label:'Cross Drain',                                             unit:'Rmt', qty:104,   rate:1800},
-      {sno:'B.1', label:'Enhancement of boundary wall',                            unit:'LS',  qty:1,     rate:25000000},
-      {sno:'C.1', label:'Hardscape Ground Floor (planter wall, steps, coping)',    unit:'Sqm', qty:617,   rate:11000},
-      {sno:'C.2', label:'Landscape & Horticulture Ground Floor',                   unit:'Sqm', qty:265,   rate:14000},
-      {sno:'C.3', label:'Water Fall Wall',                                         unit:'LS',  qty:1,     rate:5000000},
-      {sno:'C.4', label:'Green Wall',                                              unit:'Sqm', qty:782,   rate:10500},
-      {sno:'C.5', label:'Feature Wall',                                            unit:'LS',  qty:1,     rate:3000000},
-      {sno:'C.6', label:'Entrance Gate & Security Cabin, Entrance Portal',         unit:'LS',  qty:1,     rate:12500000},
-      {sno:'C.7', label:'Landscape Irrigation – External',                         unit:'LS',  qty:1,     rate:2000000},
-      {sno:'D.1', label:'Seating Planters – Gallery Entrance',                     unit:'Rmt', qty:14.44, rate:13000},
-      {sno:'D.2', label:'Green Wall – Gallery Entrance',                           unit:'Sqm', qty:16.89, rate:25000},
-      {sno:'D.10',label:'Water and Rock Garden',                                   unit:'Sqm', qty:30.99, rate:50000},
-      {sno:'D.14',label:'Hardscape',                                               unit:'LS',  qty:1,     rate:4000000},
-      {sno:'E.2', label:'Balcony Area Hardscape',                                  unit:'Sqm', qty:1190,  rate:12000},
-    ],
-    otherItems:97660738.93
-  },
-  finishes: {
-    rows: [
-      {sno:1, label:'Finishes 01 – Basements (BOQ)',        amt:139267570.63},
-      {sno:2, label:'Finishes 02 – Premium Finishes (BOQ)', amt:627900000},
-    ]
-  },
-  lighting: {
-    rows: [
-      {sno:1, label:'Façade Lighting / Landscape Lighting',   exclGst:59322000,  inclGst:70000000},
-      {sno:2, label:'Architectural Decorative Light Fixture', exclGst:55085000,  inclGst:65000000},
-      {sno:3, label:'Overall Building Light Fixture',         exclGst:7627000,   inclGst:9000000},
-    ]
-  },
-  mepf: {
-    rows: [
-      {sno:1,   label:'MEPF Tender Works',                         amt:696200000, status:'Already awarded',    cls:'awarded'},
-      {sno:2,   label:'Lightning protection system',               amt:7788000,   status:'Already awarded',    cls:'awarded'},
-      {sno:3,   label:'Diesel Generator',                          amt:125000000, status:'Tender in progress', cls:'progress'},
-      {sno:4,   label:'Chiller',                                   amt:61000000,  status:'Tender in progress', cls:'progress'},
-      {sno:5,   label:'STP',                                       amt:11850000,  status:'Already awarded',    cls:'awarded'},
-      {sno:'—', label:'Micron – NT item (7 MVA→8.2 MVA increase)', amt:20000000,  status:'Revision',           cls:'progress'},
-      {sno:'—', label:'Micron – HVAC Air Handling Unit',           amt:9700000,   status:'Revision',           cls:'progress'},
-      {sno:'—', label:'FS Cabling',                                amt:10000000,  status:'Revision',           cls:'progress'},
-      {sno:'—', label:'Electrical HT Works',                       amt:15000000,  status:'Revision',           cls:'progress'},
-    ]
-  },
-  elevators: {
-    main: [
-      {sno:1, desc:'Office Elevators (Passenger)',     tot:14, cA:7,  cB:7,   amtCr:8.1},
-      {sno:2, desc:'Retail Elevators (Passenger)',     tot:4,  cA:2,  cB:2,   amtCr:2.2},
-      {sno:3, desc:'Service Elevators (Office/Retail)',tot:3,  cA:1,  cB:2,   amtCr:1.8},
-      {sno:4, desc:'Banquet Service Elevators',        tot:1,  cA:1,  cB:'—', amtCr:0.4},
-    ],
-    oos: [
-      {sno:1, label:'Hydraulic Elevator',              amt:2800000},
-      {sno:2, label:'Interior Finishes',               amt:8000000},
-      {sno:3, label:'Retail Platform Aesthetic Lifts', amt:30000000},
-    ],
-    exclGst:146720000,
-    gstRate:0.18
-  },
-  signages: {
-    rows: [
-      {sno:1, label:'Retail Signages',                                              amt:11720000},
-      {sno:2, label:'Office Signages',                                              amt:798000},
-      {sno:3, label:'Basement Signages',                                            amt:1276650},
-      {sno:4, label:'External Development Signages',                                amt:5305000},
-      {sno:5, label:'Parking Marking, Speed Breaker, Car Stopper, Edge Protection', amt:10990420},
-    ],
-    gstRate:0.18
-  },
-  consultant: {
-    main: [
-      {sno:5,  label:'Façade Engineering Consultant',          amt:10880000},
-      {sno:7,  label:'Green Building',                         amt:2950000},
-      {sno:8,  label:'Vertical Transport Consultancy (Lifts)', amt:1290000},
-      {sno:9,  label:'RPWD',                                   amt:1500000},
-      {sno:10, label:'BOH Consultant',                         amt:1550000},
-      {sno:11, label:'Acoustics Consultant 3DB AV',            amt:4400000},
-      {sno:12, label:'Acoustic Consultant Sonics',             amt:750000},
-      {sno:13, label:'Security Assessment',                    amt:3151500},
-      {sno:14, label:'Traffic Consultant',                     amt:950000},
-      {sno:15, label:'Inkers',                                 amt:8100000},
-      {sno:16, label:'Cost Consultant',                        amt:4000000},
-      {sno:17, label:'Interior Design – Retail Spaces, Hotels',amt:42300000},
-      {sno:18, label:'Landscape Consultant',                   amt:14000000},
-      {sno:19, label:'Lighting Consultant',                    amt:36441000},
-      {sno:20, label:'BMS Consultant',                        amt:4000000},
-      {sno:21, label:'Signage Consultant',                     amt:1000000},
-      {sno:22, label:'Interiors BOQ Consultant',               amt:1090000},
-      {sno:23, label:'Other Consultants',                      amt:32500000},
-    ],
-    struct: [
-      {label:'Structural Consultant',             amt:21250000},
-      {label:'PT Consultant',                     amt:1312500},
-      {label:'Structural Peer Review Consultant', amt:1460087},
-      {label:'MEP Peer Review Consultant',        amt:3000000},
-      {label:'Lead MEPFS Consultant',             amt:10040000},
-      {label:'PMC',                               amt:61864000},
-      {label:'Other Consultants',                 amt:1500000},
-    ],
-    gstRate:0.18
-  },
-  summary3: { artWorks:10.0, notes:'' }
-};
-
-let C = {};
-
-function recompute() {
-  C.facadeRowAmts = D.facade.rows.map(r =>
-    (r.amtOverride != null) ? r.amtOverride : r.qty * r.rate
-  );
-  C.facadeRowsSum = C.facadeRowAmts.reduce((a,v)=>a+v,0);
-  C.facadeTotal   = C.facadeRowsSum + D.facade.remaining;
-
-  C.parkingRowAmts  = D.parking.rows.map(r => r.qty * r.rate);
-  C.parkingSubtotal = C.parkingRowAmts.reduce((a,v)=>a+v,0);
-  C.parkingGST      = C.parkingSubtotal * D.parking.gstRate;
-  C.parkingTotal    = C.parkingSubtotal + C.parkingGST;
-
-  C.landscapeGroupsSum  = D.landscape.groups.reduce((a,g)=>a+g.amt,0);
-  C.landscapeTotal      = C.landscapeGroupsSum + D.landscape.otherItems;
-  C.landscapeDetailAmts = D.landscape.details.map(r => r.qty * r.rate);
-
-  C.finishesTotal = D.finishes.rows.reduce((a,r)=>a+r.amt,0);
-  C.lightingTotal = D.lighting.rows.reduce((a,r)=>a+r.inclGst,0);
-  C.mepfTotal     = D.mepf.rows.reduce((a,r)=>a+r.amt,0);
-  C.elevInclGst   = D.elevators.exclGst * (1 + D.elevators.gstRate);
-
-  C.signExcl = D.signages.rows.reduce((a,r)=>a+r.amt,0);
-  C.signIncl = C.signExcl * (1 + D.signages.gstRate);
-
-  C.conMainExcl   = D.consultant.main.reduce((a,r)=>a+r.amt,0);
-  C.conMainIncl   = C.conMainExcl * (1 + D.consultant.gstRate);
-  C.conStructExcl = D.consultant.struct.reduce((a,r)=>a+r.amt,0);
-  C.conStructIncl = C.conStructExcl * (1 + D.consultant.gstRate);
-  C.conTotal      = C.conMainIncl + C.conStructIncl;
-
-  const derived = {
-    2:  C.finishesTotal / 1e7,
-    3:  C.lightingTotal / 1e7,
-    4:  C.facadeTotal   / 1e7,
-    5:  C.mepfTotal     / 1e7,
-    6:  C.elevInclGst   / 1e7,
-    7:  C.parkingTotal  / 1e7,
-    9:  C.landscapeTotal/ 1e7,
-    10: C.signIncl      / 1e7,
-    13: C.conTotal      / 1e7,
-  };
-  C.osRows = D.os.rows.map(r => {
-    const cur = r.curDirect != null ? r.curDirect : (derived[r.sno] ?? 0);
-    const exp = r.expFixed  != null ? r.expFixed  : cur;
-    return {...r, cur, exp};
-  });
-
-  C.cur13          = C.osRows.reduce((a,r)=>a+(r.cur||0),0);
-  C.contingencyCur = C.cur13 * 0.026;
-  C.labourCur      = C.cur13 * 0.005;
-
-  C.osRowsFull = [
-    ...C.osRows,
-    {sno:14, label:'CONTINGENCY @ 2.5%', init:D.os.contingencyInit, cur:C.contingencyCur, exp:C.contingencyCur},
-    {sno:15, label:'LABOUR CESS @ 0.5%', init:D.os.labourInit,       cur:C.labourCur,      exp:C.labourCur},
-  ];
-
-  C.totalInit = C.osRowsFull.reduce((a,r)=>a+(r.init||0),0);
-  C.totalCur  = C.osRowsFull.reduce((a,r)=>a+(r.cur||0),0);
-  C.totalExp  = C.osRowsFull.reduce((a,r)=>a+(r.exp||0),0);
-
-  const bySnos = snos => C.osRowsFull.filter(r=>snos.includes(r.sno));
-  C.s2g1 = bySnos([1,4,5,6,7,13]);
-  C.s2sub1 = C.s2g1.reduce((a,r)=>a+(r.exp||0),0);
-  C.s2g2 = bySnos([2,3,8,9,10,11,12]);
-  C.s2sub2 = C.s2g2.reduce((a,r)=>a+(r.exp||0),0);
-  C.s2g3 = bySnos([14,15]);
-  C.s2sub3 = C.s2g3.reduce((a,r)=>a+(r.exp||0),0);
-
-  C.s3g1 = bySnos([1,4,5,6,7,13]);
-  C.s3committed1 = C.s3g1.reduce((a,r)=>a+(r.exp||0),0);
-  C.s3g2 = bySnos([3,8,10,11]);
-  C.s3committed2 = C.s3committed1 + C.s3g2.reduce((a,r)=>a+(r.exp||0),0);
-  C.s3g3 = bySnos([2,9,12,15]);
-  C.s3total = C.s3committed2 + C.s3g3.reduce((a,r)=>a+(r.exp||0),0) + D.summary3.artWorks;
-}
-
-
-// ── UTILITIES ─────────────────────────────────────────────────────────────────
-const fmt    = (v, dec=1) => v==null?'—':(+v).toFixed(dec);
-const fmtInr = v => v==null?'—':'₹'+Math.round(v).toLocaleString('en-IN');
-const fmtCr  = v => v==null?'—':(v/1e7).toFixed(2)+' Cr';
-function diffFmt(d){
-  if(d==null||Math.abs(d)<0.0001) return '<span class="diff-zero">—</span>';
-  return `<span class="${d>0?'diff-pos':'diff-neg'}">${d>0?'+':''}${(+d).toFixed(1)}</span>`;
-}
-function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function setText(id,val){ const el=document.getElementById(id); if(el) el.textContent=val; }
-function clearTbody(id){ const el=document.getElementById(id); if(el) el.innerHTML=''; return el; }
-
-// ── EDIT HANDLER REGISTRY ─────────────────────────────────────────────────────
-let EH = {}, EI = 0;
-function resetEH(){ EH={}; EI=0; }
-
-function edCell(getVal, setVal, opts={}){
-  const {isStr=false, dec=2, big=false, cascade=null} = opts;
-  const id = ++EI;
-  EH[id] = {getVal, setVal, isStr, cascade};
-  const val = getVal();
-  let disp;
-  if(val==null) disp='—';
-  else if(isStr) disp=escHtml(val);
-  else if(big)   disp=fmtInr(val);
-  else            disp=fmt(val,dec);
-  return `<td class="${isStr?'':'num '}ed" data-eid="${id}">${disp}</td>`;
-}
-
-// ── INLINE EDITING ────────────────────────────────────────────────────────────
-let activeCell=null, activeCellOrig='';
-
-function cancelEdit(){
-  if(!activeCell) return;
-  activeCell.innerHTML = activeCellOrig;
-  activeCell=null; activeCellOrig='';
-}
-
-document.addEventListener('mousedown', e=>{
-  if(activeCell && !activeCell.contains(e.target)) cancelEdit();
-});
-
-document.addEventListener('click', e=>{
-  const cell = e.target.closest('td.ed');
-  if(!cell || cell===activeCell) return;
-  activateCell(cell);
-});
-
-function activateCell(cell){
-  cancelEdit();
-  const id = +cell.dataset.eid;
-  const handler = EH[id];
-  if(!handler) return;
-
-  activeCellOrig = cell.innerHTML;
-  activeCell = cell;
-
-  const val = handler.getVal();
-  const input = document.createElement('input');
-  input.className = 'ed-input'+(handler.isStr?' str':'');
-  input.type = handler.isStr ? 'text' : 'number';
-  input.step = 'any';
-  input.value = (val==null)?'':(handler.isStr?val:+val);
-  cell.innerHTML='';
-  cell.appendChild(input);
-  input.focus(); input.select();
-
-  input.addEventListener('keydown', ev=>{
-    if(ev.key==='Enter'){ ev.preventDefault(); input.blur(); }
-    if(ev.key==='Escape'){ ev.stopPropagation(); cancelEdit(); }
-  });
-
-  input.addEventListener('blur', ()=>{
-    if(!activeCell) return;
-    const raw = input.value.trim();
-    activeCell=null;
-    if(raw===''){cancelEdit();return;}
-    let newVal;
-    if(handler.isStr){ newVal=raw; }
-    else{ newVal=parseFloat(raw); if(isNaN(newVal)){cancelEdit();return;} }
-
-    if(handler.cascade && !handler.isStr){
-      const c = handler.cascade;
-      const qty=c.getQty(), rate=c.getRate(), oldAmt=c.getOldAmt();
-      if(qty && rate && oldAmt!==newVal){
-        showCascadeDialog({c, newAmt:newVal, qty, rate, oldAmt});
-        return;
-      }
-    }
-    handler.setVal(newVal);
-    recompute(); renderAll();
-  });
-}
-
-// ── CASCADE DIALOG ────────────────────────────────────────────────────────────
-let pendingCascade=null;
-
-function showCascadeDialog({c, newAmt, qty, rate, oldAmt}){
-  pendingCascade={c,newAmt,qty,rate,oldAmt};
-  setText('casc-qty', (+qty).toFixed(2));
-  setText('casc-rate', fmtInr(rate));
-  setText('casc-newamt', fmtInr(newAmt));
-  document.getElementById('cascade-overlay').style.display='flex';
-}
-
-function applyCascade(choice){
-  document.getElementById('cascade-overlay').style.display='none';
-  if(!pendingCascade||choice==='cancel'){renderAll();return;}
-  const {c,newAmt,qty,rate,oldAmt}=pendingCascade;
-  pendingCascade=null;
-  if(choice==='rate'){
-    c.setRate(newAmt/qty);
-    if(c.clearOverride) c.clearOverride();
-  } else if(choice==='qty'){
-    c.setQty(newAmt/rate);
-    if(c.clearOverride) c.clearOverride();
-  } else if(choice==='both'){
-    const s=Math.sqrt(newAmt/oldAmt);
-    c.setQty(qty*s); c.setRate(rate*s);
-    if(c.clearOverride) c.clearOverride();
-  } else if(choice==='override'){
-    c.setOverride(newAmt);
-  }
-  recompute(); renderAll();
-}
-
-// ── RENDER ALL ────────────────────────────────────────────────────────────────
-function renderAll(){
-  resetEH();
-  renderKPIs();
-  renderOverview();
-  renderSummary2();
-  renderSummary3();
-  renderFacade();
-  renderParking();
-  renderLandscape();
-  renderFinishes();
-  renderLighting();
-  renderMEPF();
-  renderElevators();
-  renderSignages();
-  renderConsultant();
-  buildCharts();
-  refreshDS();
-  setText('proj-name', D.project.name);
-  setText('proj-subtitle', D.project.subtitle);
-  const meta=document.getElementById('proj-meta');
-  if(meta) meta.textContent=`As at ${D.project.asAtDate}  |  All amounts in INR Crores unless noted`;
-}
-
-// ── KPIs ──────────────────────────────────────────────────────────────────────
-function renderKPIs(){
-  setText('kpi-init', C.totalInit.toFixed(1));
-  setText('kpi-cur',  C.totalCur.toFixed(1));
-  setText('kpi-exp',  C.totalExp.toFixed(1));
-  const v=C.totalInit-C.totalCur;
-  setText('kpi-var', (v>=0?'+':'')+v.toFixed(1));
-  setText('kpi-facade-cur',(C.facadeTotal/1e7).toFixed(2));
-  const fRow=C.osRowsFull.find(r=>r.sno===4);
-  setText('kpi-facade-exp', fRow?(fRow.exp||0).toFixed(2):'—');
-  const fv=D.os.rows.find(r=>r.sno===4);
-  const fvar=document.getElementById('kpi-facade-var');
-  if(fvar&&fRow) fvar.textContent=((C.facadeTotal/1e7)-(fv&&fv.init||66.5)>0?'+':'')+((C.facadeTotal/1e7)-(fv&&fv.init||66.5)).toFixed(2);
-  setText('kpi-park-sub',(C.parkingSubtotal/1e7).toFixed(2));
-  setText('kpi-park-gst',(C.parkingGST/1e7).toFixed(2));
-  setText('kpi-park-total',(C.parkingTotal/1e7).toFixed(2));
-  setText('kpi-land-total',(C.landscapeTotal/1e7).toFixed(2));
-  setText('kpi-fin-total',(C.finishesTotal/1e7).toFixed(2));
-  setText('kpi-light-total',(C.lightingTotal/1e7).toFixed(2));
-  setText('kpi-mepf-total',(C.mepfTotal/1e7).toFixed(2));
-  setText('kpi-elev-excl',(D.elevators.exclGst/1e7).toFixed(2));
-  setText('kpi-elev-incl',(C.elevInclGst/1e7).toFixed(2));
-  setText('kpi-elev-incl2',(C.elevInclGst/1e7).toFixed(2));
-  setText('kpi-elev-gstrate',(D.elevators.gstRate*100).toFixed(0));
-  setText('kpi-sign-excl',(C.signExcl/1e7).toFixed(2));
-  setText('kpi-sign-incl',(C.signIncl/1e7).toFixed(2));
-  setText('kpi-con-main-excl',(C.conMainExcl/1e7).toFixed(2));
-  setText('kpi-con-main-incl',(C.conMainIncl/1e7).toFixed(2));
-  setText('kpi-con-struct-excl',(C.conStructExcl/1e7).toFixed(2));
-  setText('kpi-con-struct-incl',(C.conStructIncl/1e7).toFixed(2));
-  setText('kpi-con-total',(C.conTotal/1e7).toFixed(2));
-  setText('kpi-s2-sub1',C.s2sub1.toFixed(1));
-  setText('kpi-s2-sub2',C.s2sub2.toFixed(1));
-  setText('kpi-s2-sub3',C.s2sub3.toFixed(1));
-  setText('kpi-s2-total',(C.s2sub1+C.s2sub2+C.s2sub3).toFixed(1));
-  setText('kpi-s3-c1',C.s3committed1.toFixed(1));
-  setText('kpi-s3-c2',C.s3committed2.toFixed(1));
-  setText('kpi-s3-total',C.s3total.toFixed(1));
-}
-
-// ── OVERALL SUMMARY ───────────────────────────────────────────────────────────
-function renderOverview(){
-  const tb=clearTbody('tbl-overall-body'); if(!tb) return;
-  const notes={
-    2:'Current: Finishes 01 (13.3 Cr) + Finishes 02 (63.2 Cr). Expected: 95 Cr',
-    3:'Façade & landscape lighting 6.5 + Interiors 7.0 + BOH 0.9 = 14.4 Cr',
-    4:'Current: Alufit 75.5 + SKK 5.9. Expected: Alufit 79.6 + SKK 5.9 = 84.5 Cr',
-  };
-  C.osRowsFull.forEach(r=>{
-    const diff=(r.init||0)-(r.cur||0);
-    const osRow=D.os.rows.find(x=>x.sno===r.sno);
-    // label cell
-    const labelCell = osRow
-      ? edCell(()=>osRow.label, v=>{osRow.label=v;}, {isStr:true})
-      : `<td style="font-weight:600">${escHtml(r.label)}</td>`;
-    // init cell
-    let initCell;
-    if(r.sno===14) initCell=edCell(()=>D.os.contingencyInit,v=>{D.os.contingencyInit=v;},{dec:1});
-    else if(r.sno===15) initCell=edCell(()=>D.os.labourInit,v=>{D.os.labourInit=v;},{dec:1});
-    else if(osRow) initCell=edCell(()=>osRow.init,v=>{osRow.init=v;},{dec:1});
-    else initCell=`<td class="num">${r.init!=null?fmt(r.init,1):'—'}</td>`;
-    // cur cell
-    let curCell;
-    if([1,8,11].includes(r.sno)&&osRow){
-      curCell=edCell(()=>osRow.curDirect,v=>{osRow.curDirect=v;},{dec:2});
-    } else if(r.sno===12&&osRow){
-      curCell=edCell(()=>osRow.curDirect,v=>{osRow.curDirect=(v||null);},{dec:2});
-    } else {
-      curCell=`<td class="num derived">${r.cur!=null?fmt(r.cur,2):'—'}</td>`;
-    }
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td class="ctr">${r.sno}</td>${labelCell}${initCell}${curCell}<td class="num">${diffFmt(diff)}</td><td class="num">${r.exp!=null?fmt(r.exp,1):'—'}</td>`;
-    tb.appendChild(tr);
-    if(notes[r.sno]){
-      const nr=document.createElement('tr');
-      nr.className='note-row';
-      nr.innerHTML=`<td></td><td></td><td></td><td class="note-cell" colspan="3">${notes[r.sno]}</td>`;
-      tb.appendChild(nr);
-    }
-  });
-  const tot=document.createElement('tr'); tot.className='total-row';
-  tot.innerHTML=`<td></td><td><strong>TOTAL</strong></td><td class="num"><strong>${fmt(C.totalInit,1)}</strong></td><td class="num"><strong>${fmt(C.totalCur,1)}</strong></td><td class="num">${diffFmt(C.totalInit-C.totalCur)}</td><td class="num"><strong>${fmt(C.totalExp,1)}</strong></td>`;
-  tb.appendChild(tot);
-}
-
-// ── SUMMARY 2 ─────────────────────────────────────────────────────────────────
-function renderSummary2(){
-  const tb=clearTbody('tbl-s2-body'); if(!tb) return;
-  function addRows(rows, sub, subLabel){
-    rows.forEach((r,i)=>{
-      const diff=(r.init||0)-(r.cur||0);
-      const isLast=i===rows.length-1;
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td class="ctr">${r.sno}</td><td style="font-weight:600">${escHtml(r.label)}</td>
-        <td class="num">${r.init!=null?fmt(r.init,1):'—'}</td>
-        <td class="num derived">${r.cur!=null?fmt(r.cur,1):'—'}</td>
-        <td class="num">${diffFmt(diff)}</td>
-        <td class="num">${r.exp!=null?fmt(r.exp,1):'—'}</td>
-        <td class="num">${isLast?`<strong>${fmt(sub,1)}</strong>`:'—'}</td>`;
-      tb.appendChild(tr);
-    });
-    const sep=document.createElement('tr'); sep.className='committed-sep';
-    sep.innerHTML=`<td colspan="7">▶ ${escHtml(subLabel)} — <strong>${fmt(sub,1)} Cr</strong></td>`;
-    tb.appendChild(sep);
-  }
-  addRows(C.s2g1, C.s2sub1, 'COST COMMITTED (STRUCTURAL)');
-  addRows(C.s2g2, C.s2sub2, 'SUB-TOTAL (INTERIORS + REMAINING)');
-  addRows(C.s2g3, C.s2sub3, 'ADD-ONS (CONTINGENCY + LABOUR CESS)');
-  const allRows=[...C.s2g1,...C.s2g2,...C.s2g3];
-  const tI=allRows.reduce((a,r)=>a+(r.init||0),0);
-  const tC=allRows.reduce((a,r)=>a+(r.cur||0),0);
-  const tE=allRows.reduce((a,r)=>a+(r.exp||0),0);
-  const tot=document.createElement('tr'); tot.className='total-row';
-  tot.innerHTML=`<td></td><td><strong>TOTAL</strong></td><td class="num"><strong>${fmt(tI,1)}</strong></td><td class="num"><strong>${fmt(tC,1)}</strong></td><td class="num">${diffFmt(tI-tC)}</td><td class="num"><strong>${fmt(tE,1)}</strong></td><td></td>`;
-  tb.appendChild(tot);
-}
-
-// ── SUMMARY 3 ─────────────────────────────────────────────────────────────────
-function renderSummary3(){
-  const tb=clearTbody('tbl-s3-body'); if(!tb) return;
-  const notes3={
-    4:'Current: Alufit 75.5 + SKK 5.9\nExpected: Alufit 79.6 + SKK 5.9',
-    3:'Façade & landscape 6.5 + Interiors 7.0 + BOH 0.9',
-    2:'Current: BOH/Service 13.3 + Lobby/Retail 63.3\nExpected: BOH/Service 13.3 + Lobby/Retail 81.7',
-  };
-  function addGroup(rows){
-    rows.forEach(r=>{
-      const diff=(r.init||0)-(r.cur||0);
-      const noteStr=(notes3[r.sno]||'').replace(/\n/g,'<br>');
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td class="ctr">${r.sno}</td><td style="font-weight:600">${escHtml(r.label)}</td>
-        <td class="num">${r.init!=null?fmt(r.init,1):'—'}</td>
-        <td class="num derived">${r.cur!=null?fmt(r.cur,1):'—'}</td>
-        <td class="num">${diffFmt(diff)}</td>
-        <td class="num">${r.exp!=null?fmt(r.exp,1):'—'}</td>
-        <td style="font-size:10px;color:var(--muted)">${noteStr}</td>`;
-      tb.appendChild(tr);
-    });
-  }
-  function sep(label, val){
-    const sr=document.createElement('tr'); sr.className='committed-sep';
-    sr.innerHTML=`<td colspan="7">▶ ${escHtml(label)} — <strong>${fmt(val,1)} Cr</strong></td>`;
-    tb.appendChild(sr);
-  }
-  addGroup(C.s3g1);
-  sep('COST COMMITTED TILL NOW (Group 1)', C.s3committed1);
-  addGroup(C.s3g2);
-  sep('COST COMMITTED TILL NOW (Group 1+2)', C.s3committed2);
-  addGroup(C.s3g3);
-  // Art Works row — editable
-  const awTr=document.createElement('tr');
-  const awCell=edCell(()=>D.summary3.artWorks, v=>{D.summary3.artWorks=v;},{dec:1});
-  awTr.innerHTML=`<td class="ctr">—</td><td style="font-weight:600">ART WORKS</td><td class="num">—</td><td class="num">—</td><td class="num">—</td>${awCell}<td style="font-size:10px;color:var(--muted)">Estimate</td>`;
-  tb.appendChild(awTr);
-  // Total
-  const tot=document.createElement('tr'); tot.className='total-row';
-  tot.innerHTML=`<td></td><td><strong>TOTAL</strong></td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num"><strong>${fmt(C.s3total,1)}</strong></td><td style="font-size:11px;color:var(--muted)">Budget Cap: 600 Cr</td>`;
-  tb.appendChild(tot);
-}
-
-// ── FAÇADE ────────────────────────────────────────────────────────────────────
-function renderFacade(){
-  const tb=clearTbody('tbl-facade-body'); if(!tb) return;
-  D.facade.rows.forEach((r,i)=>{
-    const isHeader=Number.isInteger(+r.sno)&&+r.sno>0&&+r.sno<10;
-    const tr=document.createElement('tr');
-    if(isHeader) tr.className='sub-header';
-    const cascadeOpts={
-      getQty:()=>D.facade.rows[i].qty, getRate:()=>D.facade.rows[i].rate,
-      getOldAmt:()=>C.facadeRowAmts[i],
-      setQty:v=>{D.facade.rows[i].qty=v; delete D.facade.rows[i].amtOverride;},
-      setRate:v=>{D.facade.rows[i].rate=v; delete D.facade.rows[i].amtOverride;},
-      setOverride:v=>{D.facade.rows[i].amtOverride=v;},
-      clearOverride:()=>{delete D.facade.rows[i].amtOverride;}
-    };
-    tr.innerHTML=`<td class="ctr">${escHtml(r.sno)}</td>`
-      +edCell(()=>D.facade.rows[i].type, v=>{D.facade.rows[i].type=v;},{isStr:true})
-      +edCell(()=>D.facade.rows[i].desc, v=>{D.facade.rows[i].desc=v;},{isStr:true})
-      +edCell(()=>D.facade.rows[i].qty,  v=>{D.facade.rows[i].qty=v; delete D.facade.rows[i].amtOverride;},{dec:2})
-      +edCell(()=>D.facade.rows[i].rate, v=>{D.facade.rows[i].rate=v; delete D.facade.rows[i].amtOverride;},{big:true})
-      +edCell(()=>C.facadeRowAmts[i], ()=>{},{big:true, cascade:cascadeOpts});
-    tb.appendChild(tr);
-  });
-  // Ellipsis row
-  const ell=document.createElement('tr');
-  ell.innerHTML=`<td class="ctr">…</td><td colspan="4" style="color:var(--muted);font-style:italic">Additional façade types (FT-03 through FT-09+) — 322 rows total. Edit "Remaining Balance" below or via Data Studio.</td><td></td>`;
-  tb.appendChild(ell);
-  // Remaining balance row
-  const remTr=document.createElement('tr'); remTr.className='sub-header';
-  remTr.innerHTML=`<td></td><td colspan="4" style="text-align:right">Remaining Balance (unlisted rows)</td>`
-    +edCell(()=>D.facade.remaining, v=>{D.facade.remaining=v;},{big:true});
-  tb.appendChild(remTr);
-  // Total
-  const tot=document.createElement('tr'); tot.className='total-row';
-  tot.innerHTML=`<td colspan="5" style="text-align:right;font-weight:700">TOTAL (incl. all rows)</td><td class="num"><strong>${fmtInr(C.facadeTotal)}</strong></td>`;
-  tb.appendChild(tot);
-}
-
-// ── PARKING ───────────────────────────────────────────────────────────────────
-function renderParking(){
-  const tb=clearTbody('tbl-park-body'); if(!tb) return;
-  D.parking.rows.forEach((r,i)=>{
-    const tr=document.createElement('tr');
-    const cascadeOpts={
-      getQty:()=>D.parking.rows[i].qty, getRate:()=>D.parking.rows[i].rate,
-      getOldAmt:()=>C.parkingRowAmts[i],
-      setQty:v=>{D.parking.rows[i].qty=v;},
-      setRate:v=>{D.parking.rows[i].rate=v;},
-      setOverride:v=>{D.parking.rows[i].amtOverride=v;},
-      clearOverride:()=>{delete D.parking.rows[i].amtOverride;}
-    };
-    const rowAmt=(D.parking.rows[i].amtOverride!=null)?D.parking.rows[i].amtOverride:C.parkingRowAmts[i];
-    tr.innerHTML=`<td class="ctr">${escHtml(r.sno)}</td>`
-      +edCell(()=>D.parking.rows[i].label,v=>{D.parking.rows[i].label=v;},{isStr:true})
-      +edCell(()=>D.parking.rows[i].unit, v=>{D.parking.rows[i].unit=v;}, {isStr:true})
-      +edCell(()=>D.parking.rows[i].qty,  v=>{D.parking.rows[i].qty=v;  delete D.parking.rows[i].amtOverride;},{dec:0})
-      +edCell(()=>D.parking.rows[i].rate, v=>{D.parking.rows[i].rate=v; delete D.parking.rows[i].amtOverride;},{big:true})
-      +edCell(()=>rowAmt, ()=>{},{big:true, cascade:cascadeOpts});
-    tb.appendChild(tr);
-  });
-  // Sub total
-  const s=document.createElement('tr'); s.className='total-row';
-  s.innerHTML=`<td></td><td colspan="4" style="text-align:right;font-weight:700">Sub Total</td><td class="num"><strong>${fmtInr(C.parkingSubtotal)}</strong></td>`;
-  tb.appendChild(s);
-  // GST row with editable rate
-  const gstTr=document.createElement('tr'); gstTr.className='total-row';
-  gstTr.innerHTML=`<td></td><td colspan="2" style="text-align:right;font-weight:700">GST @</td>`
-    +edCell(()=>D.parking.gstRate*100, v=>{D.parking.gstRate=v/100;},{dec:1})
-    +`<td style="text-align:right;font-weight:700">%</td><td class="num derived"><strong>${fmtInr(C.parkingGST)}</strong></td>`;
-  tb.appendChild(gstTr);
-  // Grand total
-  const g=document.createElement('tr'); g.className='total-row';
-  g.innerHTML=`<td></td><td colspan="4" style="text-align:right;font-weight:700">Grand Total (incl. GST)</td><td class="num"><strong>${fmtInr(C.parkingTotal)}</strong></td>`;
-  tb.appendChild(g);
-}
-
-// ── LANDSCAPE ─────────────────────────────────────────────────────────────────
-function renderLandscape(){
-  const tb=clearTbody('tbl-land-body'); if(!tb) return;
-  D.landscape.groups.forEach((g,gi)=>{
-    // Group header — amount editable, feeds total
-    const hTr=document.createElement('tr'); hTr.className='group-header';
-    hTr.innerHTML=`<td class="ctr">${escHtml(g.key)}</td>`
-      +edCell(()=>D.landscape.groups[gi].label, v=>{D.landscape.groups[gi].label=v;},{isStr:true})
-      +`<td></td><td></td><td></td>`
-      +edCell(()=>D.landscape.groups[gi].amt, v=>{D.landscape.groups[gi].amt=v;},{big:true});
-    tb.appendChild(hTr);
-    // Detail rows for this group
-    D.landscape.details.forEach((dr,di)=>{
-      if(!dr.sno.startsWith(g.key+'.')) return;
-      const amt=C.landscapeDetailAmts[di];
-      const cascOpts={
-        getQty:()=>D.landscape.details[di].qty, getRate:()=>D.landscape.details[di].rate,
-        getOldAmt:()=>C.landscapeDetailAmts[di],
-        setQty:v=>{D.landscape.details[di].qty=v;},
-        setRate:v=>{D.landscape.details[di].rate=v;},
-        setOverride:v=>{D.landscape.details[di].amtOverride=v;},
-        clearOverride:()=>{delete D.landscape.details[di].amtOverride;}
-      };
-      const dTr=document.createElement('tr');
-      dTr.innerHTML=`<td class="ctr" style="padding-left:20px">${escHtml(dr.sno)}</td>`
-        +edCell(()=>D.landscape.details[di].label, v=>{D.landscape.details[di].label=v;},{isStr:true})
-        +edCell(()=>D.landscape.details[di].unit||'',v=>{D.landscape.details[di].unit=v;},{isStr:true})
-        +edCell(()=>D.landscape.details[di].qty,  v=>{D.landscape.details[di].qty=v;},{dec:2})
-        +edCell(()=>D.landscape.details[di].rate, v=>{D.landscape.details[di].rate=v;},{big:true})
-        +edCell(()=>D.landscape.details[di].amtOverride??C.landscapeDetailAmts[di], ()=>{},{big:true, cascade:cascOpts});
-      tb.appendChild(dTr);
-    });
-  });
-  // Other items
-  const oTr=document.createElement('tr'); oTr.className='sub-header';
-  oTr.innerHTML=`<td></td><td colspan="4" style="text-align:right">Other Items / Unlisted BOQ Balance</td>`
-    +edCell(()=>D.landscape.otherItems, v=>{D.landscape.otherItems=v;},{big:true});
-  tb.appendChild(oTr);
-  // Total
-  const tot=document.createElement('tr'); tot.className='total-row';
-  tot.innerHTML=`<td colspan="5" style="text-align:right;font-weight:700">GRAND TOTAL (incl. GST)</td><td class="num"><strong>${fmtInr(C.landscapeTotal)}</strong></td>`;
-  tb.appendChild(tot);
-}
-
-// ── FINISHES ──────────────────────────────────────────────────────────────────
-function renderFinishes(){
-  const tb=clearTbody('tbl-fin-body'); if(!tb) return;
-  D.finishes.rows.forEach((r,i)=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td class="ctr">${r.sno}</td>`
-      +edCell(()=>D.finishes.rows[i].label, v=>{D.finishes.rows[i].label=v;},{isStr:true})
-      +edCell(()=>D.finishes.rows[i].amt,   v=>{D.finishes.rows[i].amt=v;},{big:true})
-      +`<td class="num derived">${(r.amt/1e7).toFixed(2)} Cr</td>`;
-    tb.appendChild(tr);
-  });
-  const tot=document.createElement('tr'); tot.className='total-row';
-  tot.innerHTML=`<td></td><td><strong>TOTAL (INCL. GST)</strong></td><td class="num"><strong>${fmtInr(C.finishesTotal)}</strong></td><td class="num derived"><strong>${(C.finishesTotal/1e7).toFixed(2)} Cr</strong></td>`;
-  tb.appendChild(tot);
-}
-
-// ── LIGHTING ──────────────────────────────────────────────────────────────────
-function renderLighting(){
-  const tb=clearTbody('tbl-light-body'); if(!tb) return;
-  D.lighting.rows.forEach((r,i)=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td class="ctr">${r.sno}</td>`
-      +edCell(()=>D.lighting.rows[i].label,   v=>{D.lighting.rows[i].label=v;},{isStr:true})
-      +edCell(()=>D.lighting.rows[i].exclGst, v=>{D.lighting.rows[i].exclGst=v;},{big:true})
-      +edCell(()=>D.lighting.rows[i].inclGst, v=>{D.lighting.rows[i].inclGst=v;},{big:true});
-    tb.appendChild(tr);
-  });
-  const exclSum=D.lighting.rows.reduce((a,r)=>a+r.exclGst,0);
-  [['TOTAL (EXCL. GST)',exclSum],['TOTAL (INCL. GST)',C.lightingTotal]].forEach(([label,amt])=>{
-    const tr=document.createElement('tr'); tr.className='total-row';
-    tr.innerHTML=`<td></td><td><strong>${label}</strong></td><td class="num derived"><strong>${fmtInr(amt)}</strong></td><td class="num derived"><strong>${fmtInr(amt)}</strong></td>`;
-    tb.appendChild(tr);
-  });
-}
-
-// ── MEPF ─────────────────────────────────────────────────────────────────────
-function renderMEPF(){
-  const tb=clearTbody('tbl-mepf-body'); if(!tb) return;
-  D.mepf.rows.forEach((r,i)=>{
-    const tr=document.createElement('tr');
-    const pill={awarded:'pill-awarded',progress:'pill-progress',pending:'pill-pending'}[r.cls]||'';
-    tr.innerHTML=`<td class="ctr">${r.sno}</td>`
-      +edCell(()=>D.mepf.rows[i].label, v=>{D.mepf.rows[i].label=v;},{isStr:true})
-      +edCell(()=>D.mepf.rows[i].amt,   v=>{D.mepf.rows[i].amt=v;},{big:true})
-      +`<td class="num derived">${(r.amt/1e7).toFixed(2)} Cr</td>`
-      +`<td><span class="badge-pill ${pill}">${escHtml(r.status)}</span></td>`;
-    tb.appendChild(tr);
-  });
-  const tot=document.createElement('tr'); tot.className='total-row';
-  tot.innerHTML=`<td></td><td><strong>TOTAL</strong></td><td class="num"><strong>${fmtInr(C.mepfTotal)}</strong></td><td class="num derived"><strong>${(C.mepfTotal/1e7).toFixed(2)} Cr</strong></td><td></td>`;
-  tb.appendChild(tot);
-}
-
-// ── ELEVATORS ────────────────────────────────────────────────────────────────
-function renderElevators(){
-  let tb=clearTbody('tbl-elev-body'); if(!tb) return;
-  D.elevators.main.forEach((r,i)=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td class="ctr">${r.sno}</td>`
-      +edCell(()=>D.elevators.main[i].desc, v=>{D.elevators.main[i].desc=v;},{isStr:true})
-      +`<td class="num">${r.tot}</td><td class="num">${r.cA}</td><td class="num">${r.cB}</td>`
-      +edCell(()=>D.elevators.main[i].amtCr, v=>{D.elevators.main[i].amtCr=v;},{dec:2});
-    tb.appendChild(tr);
-  });
-  const tot=document.createElement('tr'); tot.className='total-row';
-  tot.innerHTML=`<td></td><td>TOTAL</td><td class="num">22</td><td class="num">11</td><td class="num">11</td><td class="num">${D.elevators.main.reduce((a,r)=>a+(+r.amtCr||0),0).toFixed(2)} Cr</td>`;
-  tb.appendChild(tot);
-
-  tb=clearTbody('tbl-elev-oos'); if(!tb) return;
-  D.elevators.oos.forEach((r,i)=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td class="ctr">${r.sno}</td>`
-      +edCell(()=>D.elevators.oos[i].label, v=>{D.elevators.oos[i].label=v;},{isStr:true})
-      +edCell(()=>D.elevators.oos[i].amt,   v=>{D.elevators.oos[i].amt=v;},{big:true});
-    tb.appendChild(tr);
-  });
-  // Editable excl GST and GST rate
-  const exclTr=document.createElement('tr'); exclTr.className='sub-header';
-  exclTr.innerHTML=`<td></td><td style="text-align:right">TOTAL EXCL. GST (editable)</td>`
-    +edCell(()=>D.elevators.exclGst, v=>{D.elevators.exclGst=v;},{big:true});
-  tb.appendChild(exclTr);
-  const gstRateTr=document.createElement('tr'); gstRateTr.className='sub-header';
-  gstRateTr.innerHTML=`<td></td><td style="text-align:right">GST Rate (%)</td>`
-    +edCell(()=>D.elevators.gstRate*100, v=>{D.elevators.gstRate=v/100;},{dec:1});
-  tb.appendChild(gstRateTr);
-  const inclTr=document.createElement('tr'); inclTr.className='total-row';
-  inclTr.innerHTML=`<td></td><td style="text-align:right"><strong>TOTAL INCL. GST (computed)</strong></td><td class="num derived"><strong>${fmtInr(C.elevInclGst)}</strong></td>`;
-  tb.appendChild(inclTr);
-}
-
-// ── SIGNAGES ─────────────────────────────────────────────────────────────────
-function renderSignages(){
-  const tb=clearTbody('tbl-sign-body'); if(!tb) return;
-  D.signages.rows.forEach((r,i)=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td class="ctr">${r.sno}</td>`
-      +edCell(()=>D.signages.rows[i].label, v=>{D.signages.rows[i].label=v;},{isStr:true})
-      +edCell(()=>D.signages.rows[i].amt,   v=>{D.signages.rows[i].amt=v;},{big:true})
-      +`<td class="num derived">${(r.amt/1e7).toFixed(2)} Cr</td>`;
-    tb.appendChild(tr);
-  });
-  const gstRateTr=document.createElement('tr'); gstRateTr.className='sub-header';
-  gstRateTr.innerHTML=`<td></td><td style="text-align:right">GST Rate (%)</td>`
-    +edCell(()=>D.signages.gstRate*100, v=>{D.signages.gstRate=v/100;},{dec:1})
-    +`<td></td>`;
-  tb.appendChild(gstRateTr);
-  [['TOTAL (EXCL. GST)',C.signExcl],['TOTAL (INCL. GST)',C.signIncl]].forEach(([label,amt])=>{
-    const tr=document.createElement('tr'); tr.className='total-row';
-    tr.innerHTML=`<td></td><td><strong>${label}</strong></td><td class="num derived"><strong>${fmtInr(amt)}</strong></td><td class="num derived"><strong>${(amt/1e7).toFixed(2)} Cr</strong></td>`;
-    tb.appendChild(tr);
-  });
-}
-
-// ── CONSULTANT ───────────────────────────────────────────────────────────────
-function renderConsultant(){
-  let tb=clearTbody('tbl-con-body'); if(!tb) return;
-  D.consultant.main.forEach((r,i)=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td class="ctr">${r.sno}</td>`
-      +edCell(()=>D.consultant.main[i].label, v=>{D.consultant.main[i].label=v;},{isStr:true})
-      +edCell(()=>D.consultant.main[i].amt,   v=>{D.consultant.main[i].amt=v;},{big:true})
-      +`<td class="num derived">${(r.amt/1e7).toFixed(2)} Cr</td>`;
-    tb.appendChild(tr);
-  });
-  [['TOTAL (EXCL. GST)',C.conMainExcl],['TOTAL (INCL. GST)',C.conMainIncl]].forEach(([label,amt])=>{
-    const tr=document.createElement('tr'); tr.className='total-row';
-    tr.innerHTML=`<td></td><td><strong>${label}</strong></td><td class="num derived"><strong>${fmtInr(amt)}</strong></td><td class="num derived"><strong>${(amt/1e7).toFixed(2)} Cr</strong></td>`;
-    tb.appendChild(tr);
-  });
-
-  tb=clearTbody('tbl-con2-body'); if(!tb) return;
-  D.consultant.struct.forEach((r,i)=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=edCell(()=>D.consultant.struct[i].label, v=>{D.consultant.struct[i].label=v;},{isStr:true})
-      +edCell(()=>D.consultant.struct[i].amt,   v=>{D.consultant.struct[i].amt=v;},{big:true})
-      +`<td class="num derived">${(r.amt/1e7).toFixed(2)} Cr</td>`;
-    tb.appendChild(tr);
-  });
-  const gstRateTr=document.createElement('tr'); gstRateTr.className='sub-header';
-  gstRateTr.innerHTML=`<td style="text-align:right">GST Rate (%)</td>`
-    +edCell(()=>D.consultant.gstRate*100, v=>{D.consultant.gstRate=v/100;},{dec:1})
-    +`<td></td>`;
-  tb.appendChild(gstRateTr);
-  [['Total without GST',C.conStructExcl],['Total with GST',C.conStructIncl]].forEach(([label,amt])=>{
-    const tr=document.createElement('tr'); tr.className='total-row';
-    tr.innerHTML=`<td><strong>${label}</strong></td><td class="num derived"><strong>${fmtInr(amt)}</strong></td><td class="num derived"><strong>${(amt/1e7).toFixed(2)} Cr</strong></td>`;
-    tb.appendChild(tr);
-  });
-}
-
-// ── MEP COSTPLAN (static) ────────────────────────────────────────────────────
-const MEP_DATA=[
-  ['F','MEPF/SERVICES WORK',810000000,996508764.58,959071854.05,938725727.58,937333708.80,815286851.27,836960430.70,'','H'],
-  ['','ELECTRICAL',null,445456007.91,411071702.23,433651713.44,433651713.44,380498751.67,365665057.08,"Refer to 'MEP CONSUL' Sheet",'S'],
-  ['','PLUMBING',null,107870052.62,107870052.62,87904442.66,81428641.84,78773121,82131931,'','S'],
-  ['','FIREFIGHTING',null,145293316.37,142240711.52,127590013.74,127590013.74,114355395,120777456.29,'','S'],
-  ['','HVAC',null,297889387.68,297889387.68,289579557.74,294663339.77,241659583.61,268385986.33,'','S'],
-  ['—','Tenant Scope (Retail, F&B deduction)',null,-68860948.48,-68860948.48,-68860948.48,-68860948.48,null,null,'','D'],
-  ['','Parking',null,299544002.66,282975847.64,251768537.74,233490548.33,null,null,'','H'],
-  ['','PARKING ELECTRICAL',null,156681987.33,140113832.31,86017673.91,86017673.91,null,null,'LT CABLES cost not considered','S'],
-  ['','PARKING PLUMBING',null,21365090.09,21365090.09,24255303.26,23255238.47,null,null,'','S'],
-  ['','PARKING FIREFIGHTING',null,36131244.16,36131244.16,39526134.23,39526134.23,null,null,'','S'],
-  ['','PARKING HVAC',null,85365681.07,85365681.07,101969426.34,84691501.72,null,null,'','S'],
-  ['','Retail',null,73578471.55,70666618.81,69122151.37,62839269.69,null,null,'','H'],
-  ['','RETAIL ELECTRICAL',null,16935756.62,16104830.02,9248874.22,9248874.22,null,null,'','S'],
-  ['','RETAIL PLUMBING',null,2995909.13,2995909.13,2894872.59,2894872.59,null,null,'','S'],
-  ['','RETAIL FIREFIGHTING',null,24763287.95,22682361.80,30538905.04,30538905.04,null,null,'','S'],
-  ['','RETAIL HVAC',null,28883517.85,28883517.85,26439499.51,20156617.84,null,null,'','S'],
-  ['','OFFICE',null,256465341.03,254634093.81,213017724.06,174915698.06,null,null,'','H'],
-  ['','OFFICE ELECTRICAL',null,25975382.36,25115813.83,9034145.58,9034145.58,null,null,'','S'],
-  ['','OFFICE PLUMBING',null,36851651.66,36851651.66,17352717.40,14441049.46,null,null,'','S'],
-  ['','OFFICE FIREFIGHTING',null,68484861.20,67513182.50,46573459.16,46573459.16,null,null,'','S'],
-  ['','OFFICE HVAC',null,125153445.82,125153445.82,140057401.91,104867043.86,null,null,'','S'],
-  ['','MEP HIGH SIDE',null,373779871.15,373779871.15,339263698.13,339263698.13,null,null,'','H'],
-  ['','HIGHSIDE ELECTRICAL',null,210972757.75,210972757.75,216931008.13,216931008.13,null,null,'','S'],
-  ['','HIGHSIDE PLUMBING',null,29981096.45,29981096.45,31240984.95,31240984.95,null,null,'','S'],
-  ['','HIGHSIDE FIRE',null,11147805.91,11147805.91,7823246.85,7823246.85,null,null,'','S'],
-  ['','HIGHSIDE HVAC',null,121678211.04,121678211.04,83268458.21,83268458.21,null,null,'','S'],
-  ['','ELECTRICAL HT OFFSITE',0,53000000,53000000,53000000,53000000,null,null,'','H'],
-];
-let mepBuilt=false;
-function buildMEP(){
-  if(mepBuilt) return; mepBuilt=true;
-  const tb=document.getElementById('tbl-mep-body'); if(!tb) return;
-  MEP_DATA.forEach(([code,label,D2,E,F,G,H,I,K,rmk,level])=>{
-    const tr=document.createElement('tr');
-    if(level==='H') tr.className='mep-section';
-    else if(level==='S') tr.className='mep-sub';
-    else if(level==='D') tr.className='pink-row';
-    tr.innerHTML=`<td class="ctr">${code||''}</td><td>${escHtml(label)}</td>`
-      +[D2,E,F,G,H,I,K].map(v=>`<td class="num">${v!=null?fmtInr(v):'—'}</td>`).join('')
-      +`<td style="font-size:10px;color:var(--muted)">${rmk||''}</td>`;
-    tb.appendChild(tr);
-  });
-}
-
-// ── CHARTS ────────────────────────────────────────────────────────────────────
-const chartInstances={};
-function buildCharts(){
-  ['chartBar','chartPie','chartVar','chartLight','chartSign'].forEach(id=>{
-    if(chartInstances[id]){chartInstances[id].destroy();delete chartInstances[id];}
-  });
-  const labels=C.osRowsFull.map(r=>r.label.length>18?r.label.substring(0,18)+'…':r.label);
-  chartInstances['chartBar']=new Chart(document.getElementById('chartBar'),{
-    type:'bar',
-    data:{labels,datasets:[
-      {label:'Initial',data:C.osRowsFull.map(r=>r.init||0),backgroundColor:'rgba(13,110,253,0.5)',borderColor:'rgba(13,110,253,0.8)',borderWidth:1},
-      {label:'Current',data:C.osRowsFull.map(r=>r.cur||0),backgroundColor:'rgba(255,192,0,0.7)',borderColor:'#d4a017',borderWidth:1},
-      {label:'Expected',data:C.osRowsFull.map(r=>r.exp||0),backgroundColor:'rgba(40,167,69,0.4)',borderColor:'rgba(40,167,69,0.7)',borderWidth:1},
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}},scales:{x:{ticks:{font:{size:9}}},y:{ticks:{callback:v=>v+'Cr',font:{size:9}}}}}
-  });
-  const pieData=C.osRowsFull.filter(r=>(r.exp||0)>0);
-  chartInstances['chartPie']=new Chart(document.getElementById('chartPie'),{
-    type:'doughnut',
-    data:{labels:pieData.map(r=>r.label.length>16?r.label.substring(0,16)+'…':r.label),datasets:[{data:pieData.map(r=>r.exp),backgroundColor:['#0d6efd','#ffc000','#28a745','#dc3545','#fd7e14','#6610f2','#0dcaf0','#6c757d','#198754','#d63384','#20c997','#6f42c1','#0d6efd99','#ffc00099','#28a74599']}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:9},boxWidth:10}}}}
-  });
-  const varVals=C.osRowsFull.map(r=>(r.init||0)-(r.cur||0));
-  chartInstances['chartVar']=new Chart(document.getElementById('chartVar'),{
-    type:'bar',
-    data:{labels,datasets:[{label:'Variance (Initial−Current)',data:varVals,backgroundColor:varVals.map(v=>v>=0?'rgba(40,167,69,0.7)':'rgba(220,53,69,0.7)'),borderWidth:1}]},
-    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>(v>0?'+':'')+v.toFixed(1)+'Cr',font:{size:9}}},y:{ticks:{font:{size:8}}}}}
-  });
-  chartInstances['chartLight']=new Chart(document.getElementById('chartLight'),{
-    type:'pie',
-    data:{labels:D.lighting.rows.map(r=>r.label),datasets:[{data:D.lighting.rows.map(r=>r.inclGst),backgroundColor:['#ffc000','#0d6efd','#28a745']}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}}}
-  });
-  chartInstances['chartSign']=new Chart(document.getElementById('chartSign'),{
-    type:'pie',
-    data:{labels:D.signages.rows.map(r=>r.label),datasets:[{data:D.signages.rows.map(r=>r.amt),backgroundColor:['#ffc000','#0d6efd','#28a745','#dc3545','#fd7e14']}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}}}
-  });
-}
-
-// ── DATA STUDIO ───────────────────────────────────────────────────────────────
-function openDS(){ generateDS(); document.getElementById('ds-panel').classList.add('open'); document.getElementById('ds-overlay').classList.add('open'); }
-function closeDS(){ document.getElementById('ds-panel').classList.remove('open'); document.getElementById('ds-overlay').classList.remove('open'); }
-function filterDS(q){
-  q=q.toLowerCase();
-  document.querySelectorAll('.ds-field').forEach(f=>{
-    f.classList.toggle('ds-hidden', q.length>0 && !f.textContent.toLowerCase().includes(q));
-  });
-}
-function refreshDS(){
-  document.querySelectorAll('[data-ds-path]').forEach(input=>{
-    try{
-      const val=getPath(input.dataset.dsPath);
-      if(input.type==='number') input.value=(val==null)?'':(+parseFloat(val||0).toFixed(6));
-      else input.value=(val==null)?'':val;
-    }catch(e){}
-  });
-}
-function getPath(path){ return path.split('.').reduce((o,k)=>o[k],D); }
-function setPath(path,val){ const k=path.split('.'); let o=D; for(let i=0;i<k.length-1;i++) o=o[k[i]]; o[k[k.length-1]]=val; }
-
-function dsInput(path, isStr=false, label=''){
-  let val; try{val=getPath(path);}catch(e){return '';}
-  const inputAttrs=`data-ds-path="${path}" type="${isStr?'text':'number'}" step="any" value="${isStr?escHtml(val||''):+(parseFloat(val||0).toFixed(6))}"`;
-  return `<div class="ds-field"><span class="ds-f-label">${escHtml(label)}<span class="ds-f-path">${path}</span></span><input ${inputAttrs}></div>`;
-}
-function dsSec(title,content){
-  return `<div class="ds-sec"><div class="ds-sec-hdr" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">${escHtml(title)}<span class="ds-arrow">▶</span></div><div class="ds-sec-body">${content}</div></div>`;
-}
-
-function generateDS(){
-  const body=document.getElementById('ds-body'); if(!body) return;
-  let html='';
-  html+=dsSec('Project Info',
-    dsInput('project.name',true,'Project Name')+
-    dsInput('project.subtitle',true,'Subtitle')+
-    dsInput('project.asAtDate',true,'As At Date'));
-
-  let osHtml='';
-  D.os.rows.forEach((r,i)=>{
-    osHtml+=`<div class="ds-field" style="background:#f0f0f0;font-weight:700;font-size:10px;padding:6px 16px;border-bottom:1px solid #ddd">Row ${r.sno}: ${escHtml(r.label)}</div>`;
-    osHtml+=dsInput(`os.rows.${i}.label`,true,'Label');
-    osHtml+=dsInput(`os.rows.${i}.init`,false,'Initial (Cr)');
-    if(r.curDirect!=null) osHtml+=dsInput(`os.rows.${i}.curDirect`,false,'Current Direct (Cr)');
-    if(r.expFixed!=null)  osHtml+=dsInput(`os.rows.${i}.expFixed`,false,'Expected Fixed (Cr)');
-  });
-  osHtml+=dsInput('os.contingencyInit',false,'Contingency Init (Cr)');
-  osHtml+=dsInput('os.labourInit',false,'Labour Cess Init (Cr)');
-  html+=dsSec('OS Rows (1–13 + Contingency/Labour)',osHtml);
-
-  let facHtml='';
-  D.facade.rows.forEach((r,i)=>{
-    facHtml+=`<div class="ds-field" style="background:#f8f8f8;font-size:10px;color:var(--muted);padding:4px 16px;border-bottom:1px solid #eee">${r.sno}: ${escHtml(r.desc)}</div>`;
-    facHtml+=dsInput(`facade.rows.${i}.type`,true,'Type')+dsInput(`facade.rows.${i}.desc`,true,'Description');
-    facHtml+=dsInput(`facade.rows.${i}.qty`,false,'Qty (SQM)')+dsInput(`facade.rows.${i}.rate`,false,'Rate (₹/SQM)');
-  });
-  facHtml+=dsInput('facade.remaining',false,'Remaining Balance (₹)');
-  html+=dsSec('Façade Rows',facHtml);
-
-  let pHtml='';
-  D.parking.rows.forEach((r,i)=>{
-    pHtml+=dsInput(`parking.rows.${i}.label`,true,`${r.sno} label`)+dsInput(`parking.rows.${i}.unit`,true,`${r.sno} unit`);
-    pHtml+=dsInput(`parking.rows.${i}.qty`,false,`${r.sno} qty`)+dsInput(`parking.rows.${i}.rate`,false,`${r.sno} rate (₹)`);
-  });
-  pHtml+=dsInput('parking.gstRate',false,'GST Rate (decimal e.g. 0.18)');
-  html+=dsSec('Parking',pHtml);
-
-  let lHtml='';
-  D.landscape.groups.forEach((g,i)=>{ lHtml+=dsInput(`landscape.groups.${i}.label`,true,`Group ${g.key} label`)+dsInput(`landscape.groups.${i}.amt`,false,`Group ${g.key} amount (₹)`); });
-  lHtml+=dsInput('landscape.otherItems',false,'Other Items Balance (₹)');
-  D.landscape.details.forEach((r,i)=>{ lHtml+=dsInput(`landscape.details.${i}.label`,true,`${r.sno} label`)+dsInput(`landscape.details.${i}.qty`,false,`${r.sno} qty`)+dsInput(`landscape.details.${i}.rate`,false,`${r.sno} rate (₹)`); });
-  html+=dsSec('Landscape',lHtml);
-
-  let finHtml='';
-  D.finishes.rows.forEach((r,i)=>{ finHtml+=dsInput(`finishes.rows.${i}.label`,true,`Row ${r.sno} label`)+dsInput(`finishes.rows.${i}.amt`,false,`Row ${r.sno} amount (₹)`); });
-  html+=dsSec('Finishes',finHtml);
-
-  let liHtml='';
-  D.lighting.rows.forEach((r,i)=>{ liHtml+=dsInput(`lighting.rows.${i}.label`,true,`Row ${r.sno} label`)+dsInput(`lighting.rows.${i}.exclGst`,false,`Row ${r.sno} excl. GST (₹)`)+dsInput(`lighting.rows.${i}.inclGst`,false,`Row ${r.sno} incl. GST (₹)`); });
-  html+=dsSec('Lighting',liHtml);
-
-  let mHtml='';
-  D.mepf.rows.forEach((r,i)=>{ mHtml+=dsInput(`mepf.rows.${i}.label`,true,`Row ${r.sno} label`)+dsInput(`mepf.rows.${i}.amt`,false,`Row ${r.sno} amount (₹)`); });
-  html+=dsSec('MEPF',mHtml);
-
-  let eHtml=dsInput('elevators.exclGst',false,'Total Excl. GST (₹)')+dsInput('elevators.gstRate',false,'GST Rate (e.g. 0.18)');
-  D.elevators.main.forEach((r,i)=>{ eHtml+=dsInput(`elevators.main.${i}.desc`,true,`Elev ${r.sno} desc`)+dsInput(`elevators.main.${i}.amtCr`,false,`Elev ${r.sno} amt (Cr)`); });
-  D.elevators.oos.forEach((r,i)=>{ eHtml+=dsInput(`elevators.oos.${i}.label`,true,`OOS ${r.sno} label`)+dsInput(`elevators.oos.${i}.amt`,false,`OOS ${r.sno} amt (₹)`); });
-  html+=dsSec('Elevators',eHtml);
-
-  let sHtml='';
-  D.signages.rows.forEach((r,i)=>{ sHtml+=dsInput(`signages.rows.${i}.label`,true,`Row ${r.sno} label`)+dsInput(`signages.rows.${i}.amt`,false,`Row ${r.sno} amount (₹)`); });
-  sHtml+=dsInput('signages.gstRate',false,'GST Rate (e.g. 0.18)');
-  html+=dsSec('Signages',sHtml);
-
-  let cHtml='';
-  D.consultant.main.forEach((r,i)=>{ cHtml+=dsInput(`consultant.main.${i}.label`,true,`Row ${r.sno} label`)+dsInput(`consultant.main.${i}.amt`,false,`Row ${r.sno} amount (₹)`); });
-  D.consultant.struct.forEach((r,i)=>{ cHtml+=dsInput(`consultant.struct.${i}.label`,true,`Struct ${i+1} label`)+dsInput(`consultant.struct.${i}.amt`,false,`Struct ${i+1} amount (₹)`); });
-  cHtml+=dsInput('consultant.gstRate',false,'GST Rate (e.g. 0.18)');
-  html+=dsSec('Consultant',cHtml);
-
-  html+=dsSec('Summary 3 Extras',dsInput('summary3.artWorks',false,'Art Works (Cr)')+dsInput('summary3.notes',true,'Notes'));
-
-  body.innerHTML=html;
-  body.querySelectorAll('[data-ds-path]').forEach(input=>{
-    input.addEventListener('change',()=>{
-      const path=input.dataset.dsPath;
-      const val=input.type==='text'?input.value:parseFloat(input.value);
-      if(input.type!=='text'&&isNaN(val)) return;
-      setPath(path,val);
-      recompute(); renderAll();
-    });
-  });
-}
-
-// ── TAB SWITCHING ─────────────────────────────────────────────────────────────
-function showTab(id,btn){
-  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('tab-'+id).classList.add('active');
-  if(btn) btn.classList.add('active');
-}
-
-// ── INIT ──────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded',()=>{
-  recompute();
-  renderAll();
-  buildMEP();
-});
-
-</script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="js/local-config.js"></script>
+<script src="js/data.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/compute.js"></script>
+<script src="js/edit.js"></script>
+<script src="js/render.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/datastudio.js"></script>
+<script src="js/smartsheet.js"></script>
+<script src="js/tableops.js"></script>
+<script src="js/tab-builder.js"></script>
+<script src="js/keyboard.js"></script>
+<script src="js/formula.js"></script>
+<!-- FOOTER -->
+<footer class="dash-footer">
+  <div class="dash-footer-inner">
+    <span>Created by <strong>Arghya's Olama AGT</strong></span>
+    <span class="dash-footer-sep">·</span>
+    <span>Contact: <a href="mailto:arghya.ghosh@machanigroup.com" class="dash-footer-link">arghya.ghosh@machanigroup.com</a></span>
+    <span class="dash-footer-sep">·</span>
+    <span>© Machani Group 2026 &nbsp;·&nbsp; All rights reserved</span>
+  </div>
+</footer>
+
+<script src="js/firebase-app.js"></script>
+<script src="js/activity-tracker.js"></script>
+<script src="js/auth-manager.js"></script>
+<script src="js/admin-panel.js"></script>
+<script src="js/main.js"></script>
+<script src="js/pwa.js"></script>
 </body>
 </html>

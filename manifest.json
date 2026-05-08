@@ -1,0 +1,33 @@
+{
+  "name": "Regalium Cost Dashboard",
+  "short_name": "Regalium",
+  "description": "Machani Regalium Construction Cost Dashboard — by Arghya's Olama AGT",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#1a1a2e",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["finance", "business"],
+  "shortcuts": [
+    {
+      "name": "Overall Summary",
+      "url": "/?tab=overview",
+      "description": "View overall cost summary"
+    }
+  ]
+}
