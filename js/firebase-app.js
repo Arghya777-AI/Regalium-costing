@@ -83,6 +83,9 @@ function fbStartSync() {
         if (data.D)      _fbApplyD(data.D);
         if (data.FSTORE) _fbApplyFSTORE(data.FSTORE);
         if (data.TUI)    _fbApplyTUI(data.TUI);
+        // Always enforce branding — overrides whatever Firestore has stored
+        D.project.name     = 'Regalium';
+        D.project.subtitle = 'CONSTRUCTION COST DASHBOARD';
         recompute();
         renderAll();
         // Restore the previously-active tab after re-render

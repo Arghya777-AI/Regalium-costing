@@ -262,7 +262,7 @@ function _amShowLogin() {
   el.innerHTML = `
   <div class="am-card">
     <div class="am-card-logo">
-      <div class="am-logo-icon">M</div>
+      <div class="am-logo-icon">R</div>
       <div>
         <div class="am-card-title">Regalium</div>
         <div class="am-card-sub">Construction Cost Dashboard</div>
@@ -289,7 +289,7 @@ function _amShowRequestAccess(user) {
   el.innerHTML = `
   <div class="am-card">
     <div class="am-card-logo">
-      <div class="am-logo-icon">M</div>
+      <div class="am-logo-icon">R</div>
       <div><div class="am-card-title">Regalium</div><div class="am-card-sub">Construction Cost Dashboard</div></div>
     </div>
     <div class="am-req-user">

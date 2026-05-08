@@ -20,8 +20,8 @@ function renderAll() {
   buildMEP();
   buildCharts();
   refreshDS();
-  setText('proj-name', D.project.name);
-  setText('proj-subtitle', D.project.subtitle);
+  setText('proj-name', 'Regalium');
+  setText('proj-subtitle', 'CONSTRUCTION COST DASHBOARD');
   const meta = document.getElementById('proj-meta');
   if (meta) meta.textContent = `As at ${D.project.asAtDate}  |  All amounts in INR Crores unless noted`;
   applyTableOps();
