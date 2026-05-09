@@ -137,7 +137,7 @@ function fbScheduleSave() {
   if (!_fbIsAdmin || _fbReceiving || !_db) return;
   clearTimeout(_fbSaveTimer);
   fbRenderStatus('pending');
-  _fbSaveTimer = setTimeout(fbSave, 1800);
+  _fbSaveTimer = setTimeout(fbSave, 800);
 }
 
 async function fbSave() {
@@ -279,9 +279,9 @@ function _fbApplyTUI(remote) {
   if (remote.hiddenElements) {
     TUI.hiddenElements = JSON.parse(JSON.stringify(remote.hiddenElements));
   }
-  if (remote.colOrder) {
-    TUI.colOrder = JSON.parse(JSON.stringify(remote.colOrder));
-  }
+  if (remote.colOrder)   TUI.colOrder   = JSON.parse(JSON.stringify(remote.colOrder));
+  if (remote.colWidths)  TUI.colWidths  = JSON.parse(JSON.stringify(remote.colWidths));
+  if (remote.rowHeights) TUI.rowHeights = JSON.parse(JSON.stringify(remote.rowHeights));
 }
 
 function _tuiToJSON() {
@@ -292,7 +292,9 @@ function _tuiToJSON() {
     extraCols:      JSON.parse(JSON.stringify(TUI.extraCols      || {})),
     customTabs:     JSON.parse(JSON.stringify(TUI.customTabs     || [])),
     hiddenElements: JSON.parse(JSON.stringify(TUI.hiddenElements || {})),
-    colOrder:       JSON.parse(JSON.stringify(TUI.colOrder       || {}))
+    colOrder:       JSON.parse(JSON.stringify(TUI.colOrder       || {})),
+    colWidths:      JSON.parse(JSON.stringify(TUI.colWidths      || {})),
+    rowHeights:     JSON.parse(JSON.stringify(TUI.rowHeights     || {})),
   };
 }
 

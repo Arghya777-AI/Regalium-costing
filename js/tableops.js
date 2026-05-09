@@ -11,6 +11,8 @@ const TUI = {
   extraCols: {},       // tbodyId → [{id, label, cells:{rowKey:value}}]
   colOrder: {},        // tbodyId → [cidx, ...] in desired display order
   hiddenElements: {},  // hideId → true  (KPI cards, table cards, chart cards)
+  colWidths: {},       // tbodyId → { cidx: width_px }
+  rowHeights: {},      // tbodyId → { didx: height_px }
 };
 
 // Per-tbody data registry — direct links to D arrays for row insert/delete
@@ -429,6 +431,136 @@ function _initColDrag() {
   });
 }
 
+// ── Column resize ──────────────────────────────────────────────────────────────
+
+// Apply stored column widths to all cells sharing the same data-cidx.
+function _applyColWidths() {
+  Object.entries(TUI.colWidths || {}).forEach(([tbid, widths]) => {
+    const tbody = document.getElementById(tbid);
+    const table = tbody?.closest('table');
+    if (!table) return;
+    Object.entries(widths).forEach(([cidx, w]) => {
+      table.querySelectorAll(`[data-cidx="${cidx}"]`).forEach(cell => {
+        cell.style.minWidth = w + 'px';
+        cell.style.width    = w + 'px';
+      });
+    });
+  });
+}
+
+// Wire a resize handle on the right edge of each native <th> (one-time).
+function _initColResize() {
+  document.querySelectorAll('thead tr').forEach(headTr => {
+    const table = headTr.closest('table');
+    const tbid  = table?.querySelector('tbody[id]')?.id;
+    if (!tbid) return;
+
+    Array.from(headTr.querySelectorAll('th[data-cidx]')).forEach(th => {
+      if (th.dataset.colResizeInit) return;
+      th.dataset.colResizeInit = '1';
+
+      const handle = document.createElement('div');
+      handle.className = 'tui-col-resizer';
+      th.appendChild(handle);
+
+      let startX, startW;
+      handle.addEventListener('mousedown', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        startX = e.clientX;
+        startW = th.offsetWidth;
+        handle.classList.add('active');
+        document.body.style.cursor     = 'col-resize';
+        document.body.style.userSelect = 'none';
+
+        const cidx = th.dataset.cidx;
+        const onMove = e => {
+          const w = Math.max(32, startW + e.clientX - startX);
+          table.querySelectorAll(`[data-cidx="${cidx}"]`).forEach(cell => {
+            cell.style.minWidth = w + 'px';
+            cell.style.width    = w + 'px';
+          });
+        };
+        const onUp = e => {
+          const w = Math.max(32, startW + e.clientX - startX);
+          if (!TUI.colWidths[tbid]) TUI.colWidths[tbid] = {};
+          TUI.colWidths[tbid][cidx] = w;
+          handle.classList.remove('active');
+          document.body.style.cursor     = '';
+          document.body.style.userSelect = '';
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup',   onUp);
+          if (typeof fbScheduleSave === 'function') fbScheduleSave();
+        };
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup',   onUp);
+      });
+    });
+  });
+}
+
+// ── Row resize ─────────────────────────────────────────────────────────────────
+
+// Apply stored row heights to <tr> elements by didx.
+function _applyRowHeights() {
+  Object.entries(TUI.rowHeights || {}).forEach(([tbid, heights]) => {
+    const tbody = document.getElementById(tbid); if (!tbody) return;
+    Array.from(tbody.querySelectorAll(':scope > tr')).forEach(tr => {
+      const didx = tr.dataset.didx;
+      if (!didx || didx === '-1') return;
+      const h = heights[didx];
+      if (h) tr.style.height = h + 'px';
+    });
+  });
+}
+
+// Wire a resize handle at the bottom of each drag-handle cell (one-time).
+function _initRowResize() {
+  Object.keys(TREG).forEach(tbid => {
+    const tbody = document.getElementById(tbid); if (!tbody) return;
+    Array.from(tbody.querySelectorAll(':scope > tr')).forEach(tr => {
+      const didx = tr.dataset.didx;
+      if (!didx || didx === '-1') return;
+      const dhTd = tr.querySelector('.tui-dh-td');
+      if (!dhTd || dhTd.dataset.rowResizeInit) return;
+      dhTd.dataset.rowResizeInit = '1';
+
+      const handle = document.createElement('div');
+      handle.className = 'tui-row-resizer';
+      dhTd.appendChild(handle);
+
+      let startY, startH;
+      handle.addEventListener('mousedown', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        startY = e.clientY;
+        startH = tr.offsetHeight;
+        handle.classList.add('active');
+        document.body.style.cursor     = 'row-resize';
+        document.body.style.userSelect = 'none';
+
+        const onMove = e => {
+          const h = Math.max(20, startH + e.clientY - startY);
+          tr.style.height = h + 'px';
+        };
+        const onUp = e => {
+          const h = Math.max(20, startH + e.clientY - startY);
+          if (!TUI.rowHeights[tbid]) TUI.rowHeights[tbid] = {};
+          TUI.rowHeights[tbid][didx] = h;
+          handle.classList.remove('active');
+          document.body.style.cursor     = '';
+          document.body.style.userSelect = '';
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup',   onUp);
+          if (typeof fbScheduleSave === 'function') fbScheduleSave();
+        };
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup',   onUp);
+      });
+    });
+  });
+}
+
 function _addCol(tbid, afterCidx) {
   const label = prompt('Column name:', 'New Column'); if (!label) return;
   if (!TUI.extraCols[tbid]) TUI.extraCols[tbid] = [];
@@ -561,6 +693,10 @@ function applyTableOps() {
   _initRowDrag();
   _applyColOrder();
   _initColDrag();
+  _applyColWidths();
+  _initColResize();
+  _applyRowHeights();
+  _initRowResize();
   _addTableActionBars();
   _updateTabBar();
   if (typeof assignCellAddrs          === 'function') assignCellAddrs();
