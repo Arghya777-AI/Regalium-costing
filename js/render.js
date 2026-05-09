@@ -105,9 +105,10 @@ function _curEdCell(r, dec = 1) {
 }
 
 // ── OVERALL SUMMARY ───────────────────────────────────────────────────────────
-// ── Overview inline-note helpers (global so onclick= survives innerHTML round-trips) ──
+// ── Overview per-cell note helpers (global so onclick= survives innerHTML round-trips) ──
+// col = 'sno' | 'label' | 'init' | 'cur' | 'diff' | 'exp'
 function _ovNoteEdit(el, e) {
-  e.stopPropagation();   // don't activate the parent label cell's edit handler
+  e.stopPropagation();
   if (el.contentEditable === 'true') return;
   el.contentEditable = 'true';
   el.focus();
@@ -117,10 +118,12 @@ function _ovNoteEdit(el, e) {
 function _ovNoteBlur(el) {
   el.contentEditable = 'false';
   const sno = +el.dataset.sno || el.dataset.sno;
+  const col = el.dataset.col;
   const txt = el.textContent.trim();
-  if (!D.os.notes) D.os.notes = {};
-  if (txt) D.os.notes[sno] = txt;
-  else     delete D.os.notes[sno];
+  if (!D.os.cellNotes)       D.os.cellNotes = {};
+  if (!D.os.cellNotes[sno])  D.os.cellNotes[sno] = {};
+  if (txt) D.os.cellNotes[sno][col] = txt;
+  else     delete D.os.cellNotes[sno][col];
   el.classList.toggle('os-note-empty', !txt);
   if (typeof fbScheduleSave === 'function') fbScheduleSave();
 }
@@ -148,17 +151,10 @@ function renderOverview() {
       snoCell = `<td class="ctr">${r.sno}</td>`;
     }
 
-    // ── Label cell: label text + inline editable comment
-    let labelCell;
-    if (osRow) {
-      const labelEid = ++EI;
-      EH[labelEid] = { getVal: () => osRow.label, setVal: v => { osRow.label = v; }, isStr: true, cascade: null };
-      const noteText  = (D.os.notes || {})[r.sno] || '';
-      const noteCls   = 'os-note-inline' + (noteText ? '' : ' os-note-empty');
-      labelCell = `<td class="ed" data-eid="${labelEid}">${escHtml(osRow.label)}<div class="${noteCls}" data-sno="${r.sno}" data-placeholder="+ add comment…" onclick="_ovNoteEdit(this,event)" onblur="_ovNoteBlur(this)">${escHtml(noteText)}</div></td>`;
-    } else {
-      labelCell = `<td style="font-weight:600">${escHtml(r.label)}</td>`;
-    }
+    // ── Label cell
+    const labelCell = osRow
+      ? edCell(() => osRow.label, v => { osRow.label = v; }, { isStr: true })
+      : `<td style="font-weight:600">${escHtml(r.label)}</td>`;
 
     // ── initial
     let initCell;
@@ -187,6 +183,18 @@ function renderOverview() {
     if (!osRow) tr.classList.add('os-comp-row');
     tr.innerHTML = `${snoCell}${labelCell}${initCell}${curCell}<td class="num">${diffFmt(diff)}</td>${expCell}`;
     tb.appendChild(tr);
+
+    // Inject per-cell note div into every td of data rows (not computed rows 14/15)
+    if (osRow) {
+      const rowNotes = (D.os.cellNotes || {})[r.sno] || {};
+      const colKeys  = ['sno', 'label', 'init', 'cur', 'diff', 'exp'];
+      Array.from(tr.children).forEach((td, i) => {
+        const col = colKeys[i]; if (!col) return;
+        const txt = rowNotes[col] || '';
+        const cls = 'os-note-inline' + (txt ? '' : ' os-note-empty');
+        td.innerHTML += `<div class="${cls}" data-sno="${r.sno}" data-col="${col}" data-placeholder="+" onclick="_ovNoteEdit(this,event)" onblur="_ovNoteBlur(this)">${escHtml(txt)}</div>`;
+      });
+    }
   });
 
   // ── TOTAL row: cascade-editable for init, cur, and exp ──────────────────────
