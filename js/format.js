@@ -8,6 +8,136 @@ const CFORMAT = {};
 let _fmtAnchorKey = null;  // fkey of anchor cell
 let _fmtSelKeys   = new Set(); // Set<fkey> for range selection
 
+// ── Color palette data (Excel Office theme) ──────────────────────────────────
+const _FMT_PALETTE_ROWS = [
+  // Base theme colors
+  ['#FFFFFF','#000000','#E7E6E6','#44546A','#4472C4','#ED7D31','#A5A5A5','#FFC000','#5B9BD5','#70AD47'],
+  // Tint 80%
+  ['#F2F2F2','#808080','#AEAAAA','#D6DCE4','#D9E1F2','#FCE4D6','#EDEDED','#FFF2CC','#DDEBF7','#E2EFDA'],
+  // Tint 60%
+  ['#D9D9D9','#595959','#757070','#ADB9CA','#B4C6E7','#F8CBAD','#DBDBDB','#FFE699','#BDD7EE','#C6E0B4'],
+  // Tint 40%
+  ['#BFBFBF','#404040','#3A3838','#8497B0','#8EA9DB','#F4B183','#C9C9C9','#FFD966','#9DC3E6','#A9D18E'],
+  // Shade 25%
+  ['#A6A6A6','#262626','#171616','#323F4F','#2E75B6','#C55A11','#7B7B7B','#BF8F00','#2F75B6','#538135'],
+  // Shade 50%
+  ['#808080','#0D0D0D','#0C0C0C','#222A35','#1F4E79','#833C00','#525252','#7F6000','#1F4E79','#375623'],
+];
+const _FMT_STD_COLORS = [
+  '#C00000','#FF0000','#FFC000','#FFFF00','#92D050',
+  '#00B050','#00B0F0','#0070C0','#002060','#7030A0',
+];
+
+// ── Palette dropdown state ────────────────────────────────────────────────────
+let _fmtActivePalette = null; // { el, type }
+
+function fmtOpenPalette(type, anchorEl) {
+  if (_fmtActivePalette?.type === type) { _fmtClosePalette(); return; }
+  _fmtClosePalette();
+
+  const pal = document.createElement('div');
+  pal.className = 'fmt-palette';
+
+  // ── No Color ──
+  const noRow = document.createElement('div');
+  noRow.className = 'fmt-palette-nocolor';
+  const noBtn = document.createElement('button');
+  noBtn.className = 'fmt-palette-action-btn';
+  noBtn.innerHTML = '<span style="text-decoration:line-through;opacity:.5">A</span>&nbsp; No Color';
+  noBtn.onclick = () => { _fmtClosePalette(); _applyColorPick(type, null); };
+  noRow.appendChild(noBtn);
+  pal.appendChild(noRow);
+
+  // ── Theme colors ──
+  const themeLabel = document.createElement('div');
+  themeLabel.className = 'fmt-palette-label';
+  themeLabel.textContent = 'Theme Colors';
+  pal.appendChild(themeLabel);
+
+  _FMT_PALETTE_ROWS.forEach((row, ri) => {
+    const rowEl = document.createElement('div');
+    rowEl.className = 'fmt-palette-row';
+    row.forEach(color => {
+      const sw = _makeSwatch(color, type, ri === 0);
+      rowEl.appendChild(sw);
+    });
+    pal.appendChild(rowEl);
+  });
+
+  // ── Standard colors ──
+  const stdLabel = document.createElement('div');
+  stdLabel.className = 'fmt-palette-label';
+  stdLabel.style.marginTop = '6px';
+  stdLabel.textContent = 'Standard Colors';
+  pal.appendChild(stdLabel);
+
+  const stdRow = document.createElement('div');
+  stdRow.className = 'fmt-palette-row';
+  _FMT_STD_COLORS.forEach(color => stdRow.appendChild(_makeSwatch(color, type, false)));
+  pal.appendChild(stdRow);
+
+  // ── More Colors ──
+  const moreRow = document.createElement('div');
+  moreRow.className = 'fmt-palette-nocolor';
+  moreRow.style.marginTop = '4px';
+  const moreBtn = document.createElement('button');
+  moreBtn.className = 'fmt-palette-action-btn';
+  moreBtn.textContent = '⊕  More Colors…';
+  moreBtn.onclick = () => {
+    _fmtClosePalette();
+    const inp = document.getElementById(type === 'text' ? 'fmt-color-custom-in' : 'fmt-bg-custom-in');
+    if (inp) inp.click();
+  };
+  moreRow.appendChild(moreBtn);
+  pal.appendChild(moreRow);
+
+  document.body.appendChild(pal);
+
+  // Position below button
+  const rect = anchorEl.getBoundingClientRect();
+  const palW = 196;
+  let left = rect.left + window.scrollX;
+  if (left + palW > window.innerWidth - 8) left = window.innerWidth - palW - 8;
+  pal.style.left = left + 'px';
+  pal.style.top  = (rect.bottom + window.scrollY + 3) + 'px';
+
+  _fmtActivePalette = { el: pal, type };
+  setTimeout(() => document.addEventListener('mousedown', _fmtPaletteOutside), 0);
+}
+
+function _makeSwatch(color, type, needBorder) {
+  const sw = document.createElement('button');
+  sw.className = 'fmt-swatch';
+  sw.style.background = color;
+  sw.title = color;
+  if (needBorder) sw.style.outline = '1px solid #ccc';
+  sw.onclick = () => { _fmtClosePalette(); _applyColorPick(type, color); };
+  return sw;
+}
+
+function _applyColorPick(type, color) {
+  if (type === 'text') fmtSetColor(color);
+  else                 fmtSetBg(color);
+}
+
+function _fmtClosePalette() {
+  if (!_fmtActivePalette) return;
+  _fmtActivePalette.el.remove();
+  _fmtActivePalette = null;
+  document.removeEventListener('mousedown', _fmtPaletteOutside);
+}
+
+function _fmtPaletteOutside(e) {
+  if (_fmtActivePalette && !_fmtActivePalette.el.contains(e.target)) {
+    // Don't close if click is on the trigger buttons themselves (they toggle)
+    const txtBtn = document.getElementById('fmt-textcolor-btn');
+    const bgBtn  = document.getElementById('fmt-fillcolor-btn');
+    if (e.target.closest('#fmt-textcolor-btn') === txtBtn) return;
+    if (e.target.closest('#fmt-fillcolor-btn') === bgBtn)  return;
+    _fmtClosePalette();
+  }
+}
+
 // ── Key helpers ───────────────────────────────────────────────────────────────
 function _fmtKey(td) {
   if (typeof _fkey === 'function') return _fkey(td);
@@ -65,8 +195,6 @@ function _fmtHighlight() {
 // ── Update formula-bar toolbar to reflect current selection ───────────────────
 function _fmtUpdateBar() {
   const boldBtn  = document.getElementById('fmt-bold-btn');
-  const colorIn  = document.getElementById('fmt-color-in');
-  const bgIn     = document.getElementById('fmt-bg-in');
   const textIcon = document.querySelector('.fmt-text-icon');
   const fillIcon = document.querySelector('.fmt-fill-icon');
   if (!boldBtn) return;
@@ -86,16 +214,8 @@ function _fmtUpdateBar() {
   const textColor = firstFmt.color || '#212529';
   const bgColor   = firstFmt.bg    || null;
 
-  colorIn.value = textColor;
   if (textIcon) textIcon.style.borderBottomColor = textColor;
-
-  if (bgColor) {
-    bgIn.value = bgColor;
-    if (fillIcon) fillIcon.style.color = bgColor;
-  } else {
-    bgIn.value = '#ffffff';
-    if (fillIcon) fillIcon.style.color = '#e0a020';
-  }
+  if (fillIcon) fillIcon.style.color = bgColor || '#e0a020';
 }
 
 // ── Apply a transform to all selected cells ───────────────────────────────────
@@ -112,7 +232,7 @@ function _applyFmtToSel(transform) {
   if (typeof fbScheduleSave === 'function') fbScheduleSave();
 }
 
-// ── Public formatting API (called from toolbar buttons) ────────────────────────
+// ── Public formatting API ─────────────────────────────────────────────────────
 function fmtToggleBold() {
   const keys = [...(_fmtSelKeys.size ? _fmtSelKeys : (_fmtAnchorKey ? [_fmtAnchorKey] : []))];
   const allBold = keys.every(k => CFORMAT[k]?.bold);
@@ -121,14 +241,14 @@ function fmtToggleBold() {
 
 function fmtSetColor(color) {
   _applyFmtToSel(fmt => {
-    if (!color || color === '#212529' || color === '#000000') delete fmt.color;
+    if (!color) delete fmt.color;
     else fmt.color = color;
   });
 }
 
 function fmtSetBg(color) {
   _applyFmtToSel(fmt => {
-    if (!color || color === '#ffffff' || color === '#ffffffff') delete fmt.bg;
+    if (!color) delete fmt.bg;
     else fmt.bg = color;
   });
 }
@@ -186,20 +306,19 @@ function _initFormatting() {
       _fmtSelKeys   = new Set();
       _fmtHighlight();
     }
-  }, true);  // capture — runs before edit.js handlers
+  }, true);
 
   // Click (capture): prevent edit from opening on Shift+click (range select only)
   document.addEventListener('click', e => {
     if (!e.shiftKey) return;
     const td = e.target.closest('td[data-caddr]');
-    if (td && !td.classList.contains('tui-dh-td')) {
-      e.stopPropagation();
-    }
+    if (td && !td.classList.contains('tui-dh-td')) e.stopPropagation();
   }, true);
 
-  // Escape clears selection
+  // Escape clears range selection and closes palette
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
+      _fmtClosePalette();
       _fmtSelKeys = new Set();
       _fmtHighlight();
     }

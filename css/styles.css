@@ -120,26 +120,43 @@ body.fill-dragging * { user-select: none; }
 }
 .fmt-btn:hover { background: #f0f0f0; border-color: #ccc; }
 .fmt-btn.fmt-btn-active { background: #e3edff; border-color: #1565C0; color: #1565C0; }
-.fmt-clear-btn { font-size: 10px; color: var(--muted); }
+.fmt-clear-btn { font-size: 11px; color: var(--muted); padding: 0 6px; }
 .fmt-clear-btn:hover { color: var(--red); border-color: var(--red); background: #fff5f5; }
-
-/* Color picker wraps: transparent native input overlaid on icon */
-.fmt-color-wrap {
-  position: relative; height: 24px; min-width: 24px;
-  display: flex; align-items: center; justify-content: center;
-  border: 1px solid transparent; border-radius: 4px; cursor: pointer;
-}
-.fmt-color-wrap:hover { background: #f0f0f0; border-color: #ccc; }
-.fmt-color-picker {
-  position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%;
-  cursor: pointer; padding: 0; border: none;
-}
+.fmt-color-trigger { gap: 2px; padding: 0 5px; }
 .fmt-color-icon {
-  font-size: 12px; font-weight: 800; pointer-events: none;
-  line-height: 1; user-select: none;
+  font-size: 12px; font-weight: 800; line-height: 1; user-select: none;
 }
 .fmt-text-icon { color: var(--text); border-bottom: 3px solid #212529; padding-bottom: 1px; }
 .fmt-fill-icon { color: #e0a020; font-size: 14px; }
+.fmt-arr { font-size: 7px; opacity: .55; line-height: 1; }
+
+/* ── Color palette dropdown ── */
+.fmt-palette {
+  position: absolute; z-index: 9999;
+  background: #fff; border: 1px solid #d0d0d0;
+  border-radius: 6px; padding: 8px 10px 6px;
+  box-shadow: 0 6px 20px rgba(0,0,0,.18);
+  min-width: 196px;
+}
+.fmt-palette-label {
+  font-size: 10px; font-weight: 700; letter-spacing: .5px;
+  text-transform: uppercase; color: var(--muted);
+  padding: 3px 0 4px; margin-top: 2px;
+}
+.fmt-palette-row { display: flex; gap: 2px; margin-bottom: 2px; }
+.fmt-swatch {
+  width: 17px; height: 17px; border: 1px solid transparent;
+  cursor: pointer; border-radius: 2px; padding: 0; flex-shrink: 0;
+  transition: transform .08s;
+}
+.fmt-swatch:hover { transform: scale(1.3); border-color: #555 !important; z-index: 2; position: relative; }
+.fmt-palette-nocolor { padding: 1px 0; }
+.fmt-palette-action-btn {
+  width: 100%; text-align: left; background: none; border: none;
+  cursor: pointer; font-size: 12px; color: var(--text);
+  padding: 5px 6px; border-radius: 4px; display: flex; align-items: center; gap: 6px;
+}
+.fmt-palette-action-btn:hover { background: #f0f0f0; }
 
 /* Selected cell highlight */
 td.fmt-selected {
