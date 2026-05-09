@@ -1,39 +1,14 @@
 // ── SERVICE WORKER ────────────────────────────────────────────────────────────
-// Regalium Cost Dashboard — PWA caching + update detection
-// Bump CACHE_VERSION to force update notification on next deploy.
+// Regalium Cost Dashboard
+//
+// Strategy: network-first for all app code (HTML, JS, CSS, JSON).
+// The SW skips waiting immediately on install so new code is live without
+// any user action. Cache acts only as offline fallback.
 
-const CACHE_VERSION = 'v1';
-const CACHE_NAME    = `regalium-${CACHE_VERSION}`;
+const CACHE_NAME = 'regalium-v3';
 
-const PRECACHE = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/css/styles.css',
-  '/icons/icon.svg',
-  '/js/local-config.js',
-  '/js/data.js',
-  '/js/utils.js',
-  '/js/compute.js',
-  '/js/edit.js',
-  '/js/render.js',
-  '/js/charts.js',
-  '/js/datastudio.js',
-  '/js/smartsheet.js',
-  '/js/tableops.js',
-  '/js/tab-builder.js',
-  '/js/keyboard.js',
-  '/js/formula.js',
-  '/js/firebase-app.js',
-  '/js/activity-tracker.js',
-  '/js/auth-manager.js',
-  '/js/admin-panel.js',
-  '/js/pwa.js',
-  '/js/main.js'
-];
-
-// Hosts that must always go to the network
-const NETWORK_ONLY = [
+// These hosts must always go straight to the network — never cache.
+const NETWORK_ONLY_HOSTS = [
   'firebaseapp.com',
   'firestore.googleapis.com',
   'firebase.googleapis.com',
@@ -43,58 +18,93 @@ const NETWORK_ONLY = [
   'ipapi.co',
   'api.anthropic.com',
   'cdn.jsdelivr.net',
-  'gstatic.com'
+  'gstatic.com',
 ];
 
-// ── Install: precache app shell ───────────────────────────────────────────────
+function isNetworkOnly(url) {
+  return NETWORK_ONLY_HOSTS.some(h => url.hostname.includes(h));
+}
+
+// App-shell resources: network-first so deploys are instant.
+function isAppShell(url) {
+  if (url.origin !== self.location.origin) return false;
+  const p = url.pathname;
+  return (
+    p === '/' ||
+    p.endsWith('.html') ||
+    p.endsWith('.js')   ||
+    p.endsWith('.css')  ||
+    p.endsWith('.json')
+  );
+}
+
+// ── Install: cache app shell, then take over immediately ─────────────────────
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(PRECACHE))
-      .catch(e => console.warn('SW precache error (non-fatal):', e))
+    caches.open(CACHE_NAME).then(cache => cache.addAll([
+      '/', '/index.html', '/manifest.json',
+      '/css/styles.css',
+      '/js/data.js', '/js/compute.js', '/js/utils.js', '/js/render.js',
+      '/js/edit.js', '/js/charts.js', '/js/formula.js', '/js/keyboard.js',
+      '/js/tableops.js', '/js/tab-builder.js', '/js/smartsheet.js',
+      '/js/datastudio.js', '/js/activity-tracker.js', '/js/auth-manager.js',
+      '/js/admin-panel.js', '/js/firebase-app.js', '/js/main.js', '/js/pwa.js',
+    ]).catch(() => {}))
   );
-  // Do NOT skipWaiting here — let the app decide when to update
+  // Skip waiting immediately — new SW activates without requiring all tabs to close.
+  self.skipWaiting();
 });
 
-// ── Activate: clean old caches ────────────────────────────────────────────────
+// ── Activate: delete stale caches, claim all open clients ────────────────────
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
+    caches.keys()
+      .then(keys => Promise.all(
         keys.filter(k => k.startsWith('regalium-') && k !== CACHE_NAME)
             .map(k => caches.delete(k))
-      )
-    ).then(() => self.clients.claim())
+      ))
+      .then(() => self.clients.claim())
   );
 });
 
-// ── Fetch: stale-while-revalidate for app shell ───────────────────────────────
+// ── Fetch ─────────────────────────────────────────────────────────────────────
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
-  if (NETWORK_ONLY.some(h => url.hostname.includes(h))) return;
-  if (url.protocol === 'chrome-extension:') return;
 
-  event.respondWith(
-    caches.open(CACHE_NAME).then(cache =>
-      cache.match(event.request).then(cached => {
-        const networkFetch = fetch(event.request).then(res => {
-          if (res && res.ok && res.type !== 'opaque') {
-            cache.put(event.request, res.clone());
+  // Never intercept external services
+  if (isNetworkOnly(url) || url.protocol === 'chrome-extension:') return;
+
+  if (isAppShell(url)) {
+    // Network-first: always fetch fresh; cache is the offline fallback only.
+    event.respondWith(
+      fetch(event.request)
+        .then(res => {
+          if (res && res.ok) {
+            caches.open(CACHE_NAME).then(c => c.put(event.request, res.clone()));
           }
           return res;
-        }).catch(() => null);
-        // Return cached immediately; revalidate in background
-        return cached || networkFetch;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Everything else (icons, images): cache-first.
+  event.respondWith(
+    caches.match(event.request).then(cached =>
+      cached || fetch(event.request).then(res => {
+        if (res && res.ok) {
+          caches.open(CACHE_NAME).then(c => c.put(event.request, res.clone()));
+        }
+        return res;
       })
     )
   );
 });
 
-// ── Messages from app ─────────────────────────────────────────────────────────
+// Keep message handler so manual pwaApplyUpdate() still works if ever called.
 self.addEventListener('message', event => {
-  if (event.data === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
+  if (event.data === 'SKIP_WAITING') self.skipWaiting();
 });

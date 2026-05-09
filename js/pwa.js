@@ -8,45 +8,41 @@ let _pwaReg = null;
 function pwaInit() {
   if (!('serviceWorker' in navigator)) return;
 
+  // Capture existing controller before registration so we can distinguish
+  // a true update (controller changed) from first install (no prior controller).
+  const _prevCtrl = navigator.serviceWorker.controller;
+
   navigator.serviceWorker.register('/sw.js').then(reg => {
     _pwaReg = reg;
 
     // Poll for updates every 5 minutes while page is open
     setInterval(() => reg.update(), 5 * 60 * 1000);
 
-    // New SW found while page is open
-    reg.addEventListener('updatefound', () => {
-      const nw = reg.installing;
-      nw.addEventListener('statechange', () => {
-        if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-          _pwaShowUpdateBanner();
-        }
-      });
-    });
-
-    // Page reloads after SW controller changes (post-skipWaiting)
+    // New SW activates automatically (skipWaiting in sw.js install event).
+    // controllerchange fires once the new SW takes over — reload to pick up
+    // fresh assets. Skip on first install (_prevCtrl === null) to avoid a
+    // pointless reload when there was never an old controller.
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (window._pwaReloading) return;
+      if (!_prevCtrl || window._pwaReloading) return;
       window._pwaReloading = true;
+      sessionStorage.setItem('sw-updated', '1');
       location.reload();
     });
 
   }).catch(e => console.warn('SW registration failed:', e));
 }
 
-function _pwaShowUpdateBanner() {
-  if (document.getElementById('pwa-update-banner')) return;
-  const b = document.createElement('div');
-  b.id = 'pwa-update-banner';
-  b.innerHTML = `
-    <span class="pwa-upd-msg">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0 0 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 0 0 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
-      New updates available
-    </span>
-    <button class="pwa-upd-btn" onclick="pwaApplyUpdate()">Refresh now</button>
-    <button class="pwa-upd-dismiss" onclick="this.closest('#pwa-update-banner').remove()" title="Dismiss">✕</button>`;
-  document.body.appendChild(b);
-}
+// Show a toast after an auto-reload caused by a SW update
+document.addEventListener('DOMContentLoaded', () => {
+  if (sessionStorage.getItem('sw-updated')) {
+    sessionStorage.removeItem('sw-updated');
+    setTimeout(() => {
+      if (typeof kbToast === 'function') {
+        kbToast('Dashboard updated to latest version');
+      }
+    }, 1500);
+  }
+});
 
 function pwaApplyUpdate() {
   if (_pwaReg?.waiting) {
@@ -143,7 +139,6 @@ function _mobSyncUser() {
 }
 
 // Keep mobile status icon in sync with Firebase status
-const _origFbRenderStatus = window.fbRenderStatus;
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     const orig = window.fbRenderStatus;
