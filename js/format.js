@@ -128,14 +128,11 @@ function _fmtClosePalette() {
 }
 
 function _fmtPaletteOutside(e) {
-  if (_fmtActivePalette && !_fmtActivePalette.el.contains(e.target)) {
-    // Don't close if click is on the trigger buttons themselves (they toggle)
-    const txtBtn = document.getElementById('fmt-textcolor-btn');
-    const bgBtn  = document.getElementById('fmt-fillcolor-btn');
-    if (e.target.closest('#fmt-textcolor-btn') === txtBtn) return;
-    if (e.target.closest('#fmt-fillcolor-btn') === bgBtn)  return;
-    _fmtClosePalette();
-  }
+  if (!_fmtActivePalette || _fmtActivePalette.el.contains(e.target)) return;
+  // Don't close if click is on any color trigger button (they toggle)
+  const triggerIds = ['fmt-textcolor-btn','fmt-fillcolor-btn','fmt-mini-textbtn','fmt-mini-fillbtn'];
+  if (triggerIds.some(id => { const el = document.getElementById(id); return el && e.target.closest(`#${id}`) === el; })) return;
+  _fmtClosePalette();
 }
 
 // ── Key helpers ───────────────────────────────────────────────────────────────
@@ -158,23 +155,24 @@ function _tdByKey(key) {
 
 // ── Apply stored CFORMAT to cells after every render ─────────────────────────
 function applyFormatting() {
-  // Clear previous inline styles set by this system
-  document.querySelectorAll('td[data-fmt-applied]').forEach(td => {
-    td.style.fontWeight = '';
-    td.style.color      = '';
-    td.style.background = '';
-    delete td.dataset.fmtApplied;
+  // Clear previous inline styles (use removeProperty so !important styles are also cleared)
+  document.querySelectorAll('td[data-fmt-applied], th[data-fmt-applied]').forEach(el => {
+    el.style.removeProperty('font-weight');
+    el.style.removeProperty('color');
+    el.style.removeProperty('background');
+    delete el.dataset.fmtApplied;
   });
 
-  // Apply stored formats
+  // Apply with setProperty('important') so user colours override CSS !important rules
+  // on .ed (yellow bg), .formula-cell, sub-header rows, etc.
   Object.entries(CFORMAT).forEach(([key, fmt]) => {
     if (!fmt || (!fmt.bold && !fmt.color && !fmt.bg)) return;
     const td = _tdByKey(key);
     if (!td) return;
     td.dataset.fmtApplied = '1';
-    if (fmt.bold)  td.style.fontWeight = 'bold';
-    if (fmt.color) td.style.color      = fmt.color;
-    if (fmt.bg)    td.style.background = fmt.bg;
+    if (fmt.bold)  td.style.setProperty('font-weight', 'bold',     'important');
+    if (fmt.color) td.style.setProperty('color',       fmt.color,  'important');
+    if (fmt.bg)    td.style.setProperty('background',  fmt.bg,     'important');
   });
 
   // Re-apply selection highlight (cells rebuilt after render)
@@ -183,13 +181,14 @@ function applyFormatting() {
 
 // ── Selection highlight ───────────────────────────────────────────────────────
 function _fmtHighlight() {
-  document.querySelectorAll('td.fmt-selected').forEach(td => td.classList.remove('fmt-selected'));
+  document.querySelectorAll('td.fmt-selected, th.fmt-selected').forEach(el => el.classList.remove('fmt-selected'));
   const keys = _fmtSelKeys.size ? _fmtSelKeys : (_fmtAnchorKey ? new Set([_fmtAnchorKey]) : new Set());
   keys.forEach(key => {
     const td = _tdByKey(key);
     if (td) td.classList.add('fmt-selected');
   });
   _fmtUpdateBar();
+  _fmtShowMiniBar();
 }
 
 // ── Update formula-bar toolbar to reflect current selection ───────────────────
@@ -265,11 +264,81 @@ function _cellsBetween(tdA, tdB) {
   const tableA = tdA.closest('table');
   const tableB = tdB.closest('table');
   if (!tableA || tableA !== tableB) return [tdA, tdB];
-  const all = Array.from(tableA.querySelectorAll('td[data-caddr]'));
+  const all = Array.from(tableA.querySelectorAll('td[data-caddr], th[data-caddr]'));
   const iA  = all.indexOf(tdA), iB = all.indexOf(tdB);
   if (iA < 0 || iB < 0) return [tdA, tdB];
   const [lo, hi] = iA < iB ? [iA, iB] : [iB, iA];
   return all.slice(lo, hi + 1);
+}
+
+// ── Format Painter ────────────────────────────────────────────────────────────
+let _fmtPainterBuf    = null;
+let _fmtPainterActive = false;
+
+function fmtCopyPaint() {
+  const keys = [...(_fmtSelKeys.size ? _fmtSelKeys : (_fmtAnchorKey ? [_fmtAnchorKey] : []))];
+  if (!keys.length) return;
+  _fmtPainterBuf    = CFORMAT[keys[0]] ? { ...CFORMAT[keys[0]] } : {};
+  _fmtPainterActive = true;
+  document.body.classList.add('fmt-painter-mode');
+  document.getElementById('fmt-paint-btn')?.classList.add('fmt-btn-active');
+  document.getElementById('fmt-mini-paint')?.classList.add('fmt-btn-active');
+}
+
+function _fmtCancelPainter() {
+  _fmtPainterActive = false;
+  _fmtPainterBuf    = null;
+  document.body.classList.remove('fmt-painter-mode');
+  document.getElementById('fmt-paint-btn')?.classList.remove('fmt-btn-active');
+  document.getElementById('fmt-mini-paint')?.classList.remove('fmt-btn-active');
+}
+
+// ── Mini floating toolbar (appears near selected cell) ────────────────────────
+let _fmtMiniBar = null;
+
+function _fmtShowMiniBar() {
+  const keys = [...(_fmtSelKeys.size ? _fmtSelKeys : (_fmtAnchorKey ? [_fmtAnchorKey] : []))];
+
+  // Build once
+  if (!_fmtMiniBar) {
+    _fmtMiniBar = document.createElement('div');
+    _fmtMiniBar.id = 'fmt-mini-bar';
+    _fmtMiniBar.className = 'fmt-mini-bar';
+    _fmtMiniBar.innerHTML =
+      `<button class="fmt-btn" id="fmt-mini-bold" title="Bold (Ctrl+B)" onclick="fmtToggleBold()"><b>B</b></button>` +
+      `<button class="fmt-btn fmt-color-trigger" id="fmt-mini-textbtn" title="Text color" onclick="fmtOpenPalette('text',this)"><span class="fmt-color-icon fmt-mini-text-icon">A</span><span class="fmt-arr">&#9660;</span></button>` +
+      `<button class="fmt-btn fmt-color-trigger" id="fmt-mini-fillbtn" title="Fill color" onclick="fmtOpenPalette('bg',this)"><span class="fmt-color-icon fmt-mini-fill-icon">&#9632;</span><span class="fmt-arr">&#9660;</span></button>` +
+      `<button id="fmt-mini-paint" class="fmt-btn" title="Format Painter: copy this cell's style, then click another cell" onclick="fmtCopyPaint()">&#x1F58C;</button>` +
+      `<button class="fmt-btn fmt-clear-btn" title="Clear formatting" onclick="fmtClear()">&#10005;</button>`;
+    document.body.appendChild(_fmtMiniBar);
+  }
+
+  if (!keys.length) { _fmtMiniBar.style.display = 'none'; return; }
+
+  const anchorTd = _fmtAnchorKey ? _tdByKey(_fmtAnchorKey) : null;
+  if (!anchorTd) { _fmtMiniBar.style.display = 'none'; return; }
+
+  const rect = anchorTd.getBoundingClientRect();
+  if (!rect.width) { _fmtMiniBar.style.display = 'none'; return; }
+
+  const barW = 180;
+  let left = rect.left + window.scrollX;
+  if (left + barW > window.innerWidth - 8) left = window.innerWidth - barW - 8;
+  _fmtMiniBar.style.left = Math.max(4, left) + 'px';
+  _fmtMiniBar.style.top  = (rect.bottom + window.scrollY + 4) + 'px';
+  _fmtMiniBar.style.display = 'flex';
+
+  // Sync bold state
+  const allBold = keys.every(k => CFORMAT[k]?.bold);
+  document.getElementById('fmt-mini-bold')?.classList.toggle('fmt-btn-active', allBold);
+  document.getElementById('fmt-mini-paint')?.classList.toggle('fmt-btn-active', _fmtPainterActive);
+
+  // Sync colour indicators
+  const firstFmt = CFORMAT[keys[0]] || {};
+  const textIcon = _fmtMiniBar.querySelector('.fmt-mini-text-icon');
+  const fillIcon = _fmtMiniBar.querySelector('.fmt-mini-fill-icon');
+  if (textIcon) textIcon.style.borderBottomColor = firstFmt.color || '#212529';
+  if (fillIcon) fillIcon.style.color             = firstFmt.bg    || '#e0a020';
 }
 
 // ── Init: event listeners ─────────────────────────────────────────────────────
@@ -284,11 +353,28 @@ function _initFormatting() {
 
   // Mousedown (capture): update anchor / extend range selection
   document.addEventListener('mousedown', e => {
-    const td = e.target.closest('td[data-caddr]');
+    // Ignore clicks inside the mini toolbar or palette (they have their own handlers)
+    if (e.target.closest('#fmt-mini-bar, .fmt-palette')) return;
+
+    const td = e.target.closest('td[data-caddr], th[data-caddr]');
     if (!td || td.classList.contains('tui-dh-td')) return;
 
     const key = _fmtKey(td);
     if (!key) return;
+
+    // Format Painter: apply buffered format to clicked cell
+    if (_fmtPainterActive) {
+      e.preventDefault(); e.stopPropagation();
+      if (_fmtPainterBuf && Object.keys(_fmtPainterBuf).length > 0) {
+        CFORMAT[key] = { ..._fmtPainterBuf };
+      } else {
+        delete CFORMAT[key];
+      }
+      applyFormatting();
+      if (typeof fbScheduleSave === 'function') fbScheduleSave();
+      _fmtCancelPainter();
+      return;
+    }
 
     if (e.shiftKey && _fmtAnchorKey) {
       e.preventDefault();
@@ -311,15 +397,17 @@ function _initFormatting() {
   // Click (capture): prevent edit from opening on Shift+click (range select only)
   document.addEventListener('click', e => {
     if (!e.shiftKey) return;
-    const td = e.target.closest('td[data-caddr]');
+    const td = e.target.closest('td[data-caddr], th[data-caddr]');
     if (td && !td.classList.contains('tui-dh-td')) e.stopPropagation();
   }, true);
 
-  // Escape clears range selection and closes palette
+  // Escape: cancel painter first, then clear range selection
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
       _fmtClosePalette();
-      _fmtSelKeys = new Set();
+      if (_fmtPainterActive) { _fmtCancelPainter(); return; }
+      _fmtAnchorKey = null;
+      _fmtSelKeys   = new Set();
       _fmtHighlight();
     }
   });

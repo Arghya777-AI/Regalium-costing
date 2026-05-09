@@ -126,8 +126,8 @@ body.fill-dragging * { user-select: none; }
 .fmt-color-icon {
   font-size: 12px; font-weight: 800; line-height: 1; user-select: none;
 }
-.fmt-text-icon { color: var(--text); border-bottom: 3px solid #212529; padding-bottom: 1px; }
-.fmt-fill-icon { color: #e0a020; font-size: 14px; }
+.fmt-text-icon, .fmt-mini-text-icon { color: var(--text); border-bottom: 3px solid #212529; padding-bottom: 1px; }
+.fmt-fill-icon, .fmt-mini-fill-icon { color: #e0a020; font-size: 14px; }
 .fmt-arr { font-size: 7px; opacity: .55; line-height: 1; }
 
 /* ── Color palette dropdown ── */
@@ -158,12 +158,26 @@ body.fill-dragging * { user-select: none; }
 }
 .fmt-palette-action-btn:hover { background: #f0f0f0; }
 
-/* Selected cell highlight */
-td.fmt-selected {
+/* Selected cell highlight — td and th both */
+td.fmt-selected, th.fmt-selected {
   outline: 2px solid #1565C0 !important;
   outline-offset: -2px;
   background: rgba(21, 101, 192, 0.07) !important;
 }
+
+/* Mini floating toolbar */
+.fmt-mini-bar {
+  position: absolute; z-index: 9995;
+  background: #fff; border: 1px solid #d0d0d0;
+  border-radius: 7px; padding: 2px 4px;
+  box-shadow: 0 4px 18px rgba(0,0,0,.18);
+  display: none; align-items: center; gap: 2px;
+  pointer-events: auto;
+}
+/* Format Painter cursor mode */
+body.fmt-painter-mode,
+body.fmt-painter-mode td[data-caddr],
+body.fmt-painter-mode th[data-caddr] { cursor: crosshair !important; }
 
 /* ── TABS ── */
 .tabs-wrap { background: var(--navy); padding: 0 24px; overflow-x: auto; display: flex; gap: 0; white-space: nowrap; }
@@ -533,7 +547,7 @@ tr:hover .tui-row-resizer { background: rgba(180,150,80,0.25); }
 .ss-key-warn { background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; padding: 8px 12px; font-size: 11px; color: #856404; margin-bottom: 14px; }
 
 /* ── FORMULA CELLS ── */
-td.formula-cell { background: #e8f0fe !important; color: #1a56db !important; }
+td.formula-cell { border-left: 2px solid rgba(68,114,196,.5) !important; }
 td.formula-err  { background: #fce8e6 !important; color: #c0392b !important; }
 td.fp-active-cell { outline: 2px dashed #fbbc04 !important; outline-offset: -2px; }
 .fx-num  { display: inline; }

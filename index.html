@@ -86,6 +86,7 @@
     <button id="fmt-fillcolor-btn" class="fmt-btn fmt-color-trigger" title="Fill color" onclick="fmtOpenPalette('bg', this)">
       <span class="fmt-color-icon fmt-fill-icon">&#9632;</span><span class="fmt-arr">&#9660;</span>
     </button>
+    <button id="fmt-paint-btn" class="fmt-btn" title="Format Painter: copy style from selected cell, then click target cell to paste" onclick="fmtCopyPaint()">&#x1F58C;</button>
     <button class="fmt-btn fmt-clear-btn" title="Clear all formatting from selection" onclick="fmtClear()">&#10005;</button>
     <!-- Hidden custom color inputs (opened via More Colors… in palette) -->
     <input type="color" id="fmt-color-custom-in" style="position:fixed;opacity:0;width:0;height:0;pointer-events:none" oninput="fmtSetColor(this.value)">
