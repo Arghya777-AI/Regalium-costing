@@ -86,26 +86,35 @@ function fbStartSync() {
         // Always enforce branding — overrides whatever Firestore has stored
         D.project.name     = 'Regalium';
         D.project.subtitle = 'CONSTRUCTION COST DASHBOARD';
-        recompute();
-        renderAll();
-        // Restore the previously-active tab after re-render
-        if (_activeTabId) {
-          const targetBtn = document.querySelector(
-            `.tab-btn[data-tab-id="${_activeTabId}"], .tab-btn[onclick*="'${_activeTabId}'"]`
-          );
-          if (targetBtn && targetBtn.style.display !== 'none') {
-            showTab(_activeTabId.replace(/^tui_/, 'tui_'), targetBtn);
-          }
-        }
+
         const updBy  = data.updatedBy || '';
         const meId   = window._amUser?.email || window._amUser?.displayName || '';
         const whoRaw = updBy && updBy !== meId ? updBy : '';
-        // Show first name or local-part only (e.g. "ashik" from "ashik.raheem@...")
         const whoShort = whoRaw.includes('@')
           ? whoRaw.split('@')[0].split('.')[0]
           : whoRaw.split(' ')[0];
         const who = whoShort ? ` · ${whoShort} edited` : '';
-        fbRenderStatus('online', who);
+
+        if (typeof isEditActive === 'function' && isEditActive()) {
+          // Another admin saved while this user is mid-edit — defer the visual re-render
+          // so we don't destroy the active input. edit.js will apply it after confirm/cancel.
+          window._fbPendingRender = true;
+          window._fbPendingTabId  = _activeTabId;
+          fbRenderStatus('online', (who || '') + ' · pending');
+        } else {
+          recompute();
+          renderAll();
+          // Restore the previously-active tab after re-render
+          if (_activeTabId) {
+            const targetBtn = document.querySelector(
+              `.tab-btn[data-tab-id="${_activeTabId}"], .tab-btn[onclick*="'${_activeTabId}'"]`
+            );
+            if (targetBtn && targetBtn.style.display !== 'none') {
+              showTab(_activeTabId.replace(/^tui_/, 'tui_'), targetBtn);
+            }
+          }
+          fbRenderStatus('online', who);
+        }
       } finally {
         _fbReceiving = false;
         _fbDismissOverlay();

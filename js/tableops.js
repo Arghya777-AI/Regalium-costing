@@ -238,6 +238,12 @@ function _colMenu(e, th) {
       recompute(); renderAll(); applyTableOps();
       if (typeof fbScheduleSave === 'function') fbScheduleSave();
     }} : null,
+    (tbid && TUI.colWidths[tbid] && Object.keys(TUI.colWidths[tbid]).length > 0) ? '—' : null,
+    (tbid && TUI.colWidths[tbid] && Object.keys(TUI.colWidths[tbid]).length > 0) ? { icon: '↔', label: 'Reset Column Widths', fn: () => {
+      delete TUI.colWidths[tbid];
+      applyTableOps();
+      if (typeof fbScheduleSave === 'function') fbScheduleSave();
+    }} : null,
   ]);
 }
 

@@ -50,10 +50,25 @@ function edCascCell(getVal, components, opts = {}) {
 // ── Click-to-edit ─────────────────────────────────────────────────────────────
 let activeCell = null, activeCellOrig = '';
 
+function isEditActive() { return !!activeCell; }
+
+function _applyPendingFbRender() {
+  if (!window._fbPendingRender) return;
+  window._fbPendingRender = false;
+  recompute(); renderAll();
+  if (window._fbPendingTabId) {
+    const tabId = window._fbPendingTabId;
+    delete window._fbPendingTabId;
+    const btn = document.querySelector(`.tab-btn[data-tab-id="${tabId}"]`);
+    if (btn && btn.style.display !== 'none') showTab(tabId, btn);
+  }
+}
+
 function cancelEdit() {
   if (!activeCell) return;
   activeCell.innerHTML = activeCellOrig;
   activeCell = null; activeCellOrig = '';
+  _applyPendingFbRender();
 }
 
 document.addEventListener('mousedown', e => {
@@ -140,6 +155,7 @@ function activateCell(cell) {
     handler.setVal(newVal);
     recompute();
     renderAll();
+    window._fbPendingRender = false;  // our renderAll covers any pending update
   });
 }
 
