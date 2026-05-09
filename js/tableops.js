@@ -1159,6 +1159,24 @@ function _addTableActionBars() {
       recompute(); renderAll(); applyTableOps();
     };
     bar.appendChild(addBtn);
+
+    // Overview-only: renumber S No sequentially by current row order
+    if (tbid === 'tbl-overall-body') {
+      const isAdmin = (typeof _fbIsAdmin !== 'undefined') ? _fbIsAdmin : true;
+      if (isAdmin) {
+        const renumBtn = document.createElement('button');
+        renumBtn.className = 'tui-add-row-btn';
+        renumBtn.textContent = '⟳ Renumber Rows';
+        renumBtn.title = 'Reset S No to 1, 2, 3… in current display order';
+        renumBtn.onclick = () => {
+          D.os.rows.forEach((row, i) => { row.displaySno = String(i + 1); });
+          recompute(); renderAll(); applyTableOps();
+          if (typeof fbScheduleSave === 'function') fbScheduleSave();
+        };
+        bar.appendChild(renumBtn);
+      }
+    }
+
     wrap.appendChild(bar);
   });
 }

@@ -184,10 +184,11 @@ function renderOverview() {
     tr.innerHTML = `${snoCell}${labelCell}${initCell}${curCell}<td class="num">${diffFmt(diff)}</td>${expCell}`;
     tb.appendChild(tr);
 
-    // Inject per-cell note div into every td of data rows (not computed rows 14/15)
+    // Inject per-cell note div under numeric columns only (not sno/label/diff)
+    // colKeys index matches tr.children order: [sno, label, init, cur, diff, exp]
     if (osRow) {
       const rowNotes = (D.os.cellNotes || {})[r.sno] || {};
-      const colKeys  = ['sno', 'label', 'init', 'cur', 'diff', 'exp'];
+      const colKeys  = [null, null, 'init', 'cur', null, 'exp'];
       Array.from(tr.children).forEach((td, i) => {
         const col = colKeys[i]; if (!col) return;
         const txt = rowNotes[col] || '';
