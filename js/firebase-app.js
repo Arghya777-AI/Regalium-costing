@@ -272,6 +272,17 @@ function _fbApplyD(remote) {
     });
   }
   deepMerge(D, remote, null);
+
+  // Migration: rows 14/15 (contingency/labour) moved into D.os.rows so they can be dragged.
+  // Old Firestore data won't have them — add from legacy fields if missing.
+  if (D.os && Array.isArray(D.os.rows)) {
+    if (!D.os.rows.find(r => r.sno === 14)) {
+      D.os.rows.push({ sno: 14, label: 'CONTINGENCY @ 2.5%', init: D.os.contingencyInit ?? 15.8, curDirect: null, expFixed: null });
+    }
+    if (!D.os.rows.find(r => r.sno === 15)) {
+      D.os.rows.push({ sno: 15, label: 'LABOUR CESS @ 0.5%', init: D.os.labourInit ?? 3.2, curDirect: null, expFixed: null });
+    }
+  }
 }
 
 function _fbApplyFSTORE(remote) {

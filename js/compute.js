@@ -64,16 +64,18 @@ function recompute() {
     return { ...r, cur, exp };
   });
 
-  // ── CONTINGENCY & LABOUR (depend on sum of rows 1–13) ──
-  C.cur13          = C.osRows.reduce((a, r) => a + (r.cur || 0), 0);
+  // ── CONTINGENCY & LABOUR (depend on sum of rows 1–13 only) ──
+  C.cur13          = C.osRows.filter(r => r.sno < 14).reduce((a, r) => a + (r.cur || 0), 0);
   C.contingencyCur = C.cur13 * 0.026;
   C.labourCur      = C.cur13 * 0.005;
 
-  C.osRowsFull = [
-    ...C.osRows,
-    { sno: 14, label: 'CONTINGENCY @ 2.5%', init: D.os.contingencyInit, cur: C.contingencyCur, exp: C.contingencyCur },
-    { sno: 15, label: 'LABOUR CESS @ 0.5%', init: D.os.labourInit,       cur: C.labourCur,      exp: C.labourCur      },
-  ];
+  // Patch rows 14/15 with their percentage-derived cur values (initial pass had cur=0)
+  C.osRows = C.osRows.map(r => {
+    if (r.sno === 14) return { ...r, cur: C.contingencyCur, exp: r.expFixed ?? C.contingencyCur };
+    if (r.sno === 15) return { ...r, cur: C.labourCur,      exp: r.expFixed ?? C.labourCur };
+    return r;
+  });
+  C.osRowsFull = C.osRows;
 
   // ── GRAND TOTALS ──
   C.totalInit = C.osRowsFull.reduce((a, r) => a + (r.init || 0), 0);

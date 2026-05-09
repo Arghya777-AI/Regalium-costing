@@ -69,9 +69,6 @@ function _curCascComps(sno) {
 // Shared helper: editable exp cell for an OS row (sets expFixed to pin the value)
 function _expEdCell(r) {
   const osRow = D.os.rows.find(x => x.sno === r.sno);
-  if (r.sno === 14 || r.sno === 15) {
-    return `<td class="num derived">${r.exp != null ? fmt(r.exp, 1) : '—'}</td>`;
-  }
   if (osRow) {
     return edCell(
       () => { const cr = C.osRowsFull.find(x => x.sno === r.sno); return cr ? cr.exp : null; },
@@ -84,8 +81,6 @@ function _expEdCell(r) {
 
 // Shared helper: editable init cell for an OS row
 function _initEdCell(r) {
-  if (r.sno === 14) return edCell(() => D.os.contingencyInit, v => { D.os.contingencyInit = v; }, { dec: 1 });
-  if (r.sno === 15) return edCell(() => D.os.labourInit,      v => { D.os.labourInit = v;      }, { dec: 1 });
   const osRow = D.os.rows.find(x => x.sno === r.sno);
   if (osRow) return edCell(() => osRow.init, v => { osRow.init = v; }, { dec: 1 });
   return `<td class="num">${r.init != null ? fmt(r.init, 1) : '—'}</td>`;
@@ -158,9 +153,7 @@ function renderOverview() {
 
     // ── initial
     let initCell;
-    if (r.sno === 14) initCell = edCell(() => D.os.contingencyInit, v => { D.os.contingencyInit = v; }, { dec: 1 });
-    else if (r.sno === 15) initCell = edCell(() => D.os.labourInit, v => { D.os.labourInit = v; }, { dec: 1 });
-    else if (osRow) initCell = edCell(() => osRow.init, v => { osRow.init = v; }, { dec: 1 });
+    if (osRow) initCell = edCell(() => osRow.init, v => { osRow.init = v; }, { dec: 1 });
     else initCell = `<td class="num">${r.init != null ? fmt(r.init, 1) : '—'}</td>`;
 
     // ── current: direct for rows 1/8/11/12; cascade-editable for sheet-derived rows
@@ -199,16 +192,12 @@ function renderOverview() {
   });
 
   // ── TOTAL row: cascade-editable for init, cur, and exp ──────────────────────
-  // Init: scale all non-null row inits + contingency/labour inits
-  const initTotalComps = [
-    ...D.os.rows
-      .map((r, i) => r.init != null
-        ? { getVal: () => D.os.rows[i].init, setVal: v => { D.os.rows[i].init = v; } }
-        : null)
-      .filter(Boolean),
-    { getVal: () => D.os.contingencyInit, setVal: v => { D.os.contingencyInit = v; } },
-    { getVal: () => D.os.labourInit,      setVal: v => { D.os.labourInit = v; } }
-  ];
+  // Init: scale all non-null row inits (rows 14/15 now live in D.os.rows)
+  const initTotalComps = D.os.rows
+    .map((r, i) => r.init != null
+      ? { getVal: () => D.os.rows[i].init, setVal: v => { D.os.rows[i].init = v; } }
+      : null)
+    .filter(Boolean);
   // Cur: direct-editable rows + all sheet components for derived rows
   const curTotalComps = [
     ...D.os.rows
@@ -216,7 +205,7 @@ function renderOverview() {
       .map(r => ({ getVal: () => r.curDirect, setVal: v => { r.curDirect = v; } })),
     ...[2, 3, 4, 5, 6, 7, 9, 10, 13].flatMap(sno => _curCascComps(sno))
   ];
-  // Exp: pin expFixed for all rows 1–13 (14/15 are percentage-derived, left alone)
+  // Exp: pin expFixed for all rows (including 14/15 which can now be overridden)
   const expTotalComps = D.os.rows.map((r, i) => ({
     getVal: () => { const cr = C.osRowsFull.find(x => x.sno === r.sno); return cr ? (cr.exp || 0) : 0; },
     setVal: v  => { D.os.rows[i].expFixed = v; }

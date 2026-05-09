@@ -26,6 +26,8 @@ const D = {
       { sno: 11, label: 'FIRE DOORS',                                  init: null,  curDirect: 2.4,         expFixed: 2.4   },
       { sno: 12, label: 'RETAIL & OFFICE SHOPFRONT',                   init: null,  curDirect: null,        expFixed: 2     },
       { sno: 13, label: 'CONSULTANT',                                  init: 32.1,  curDirect: null,        expFixed: null  },
+      { sno: 14, label: 'CONTINGENCY @ 2.5%',                         init: 15.8,  curDirect: null,        expFixed: null  },
+      { sno: 15, label: 'LABOUR CESS @ 0.5%',                         init: 3.2,   curDirect: null,        expFixed: null  },
     ],
     contingencyInit: 15.8,
     labourInit: 3.2,
