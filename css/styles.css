@@ -170,6 +170,24 @@ body.fmt-painter-mode,
 body.fmt-painter-mode td[data-caddr],
 body.fmt-painter-mode th[data-caddr] { cursor: crosshair !important; }
 
+/* Mini floating toolbar */
+.fmt-mini-bar {
+  position: fixed;
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  gap: 2px;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 3px 4px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.18);
+  pointer-events: auto;
+}
+.fmt-mini-bar .fmt-btn { height: 26px; min-width: 26px; padding: 0 5px; font-size: 12px; }
+.fmt-mini-text-icon { color: var(--text); border-bottom: 3px solid #212529; padding-bottom: 1px; font-size: 12px; }
+.fmt-mini-fill-icon { color: #e0a020; font-size: 13px; }
+
 /* ── TABS ── */
 .tabs-wrap { background: var(--navy); padding: 0 24px; overflow-x: auto; display: flex; gap: 0; white-space: nowrap; }
 .tabs-wrap::-webkit-scrollbar { height: 4px; }
@@ -270,7 +288,7 @@ td.ed { cursor: pointer; position: relative; background: rgba(255,252,196,0.55) 
 td.ed::after { content: "✏"; position: absolute; top: 2px; right: 3px; font-size: 9px; color: #b8860b; opacity: 0.5; }
 td.ed:hover { background: #fffde7 !important; outline: 2px solid #ffc000; outline-offset: -2px; }
 td.ed:hover::after { opacity: 1; }
-.ed-input { width: 100%; border: 2px solid var(--gold); padding: 3px 6px; font: inherit; font-size: 12px; background: #fffde7; text-align: right; border-radius: 3px; outline: none; box-shadow: 0 0 0 3px rgba(255,192,0,.2); }
+.ed-input { width: 100%; box-sizing: border-box; border: 2px solid var(--gold); padding: 3px 6px; font: inherit; font-size: 12px; background: #fffde7; text-align: right; border-radius: 3px; outline: none; box-shadow: 0 0 0 3px rgba(255,192,0,.2); }
 .ed-input.str { text-align: left; }
 .ed-input.casc { border-color: #2196f3; background: #e8f4ff; box-shadow: 0 0 0 3px rgba(33,150,243,.2); }
 td.derived { color: #1565c0; font-style: italic; }
@@ -538,7 +556,7 @@ tr:hover .tui-row-resizer { background: rgba(180,150,80,0.25); }
 .ss-key-warn { background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; padding: 8px 12px; font-size: 11px; color: #856404; margin-bottom: 14px; }
 
 /* ── FORMULA CELLS ── */
-td.formula-cell { border-left: 2px solid rgba(68,114,196,.5) !important; }
+td.formula-cell { box-shadow: inset 3px 0 0 rgba(68,114,196,.45); }
 td.formula-err  { background: #fce8e6 !important; color: #c0392b !important; }
 td.fp-active-cell { outline: 2px dashed #fbbc04 !important; outline-offset: -2px; }
 .fx-num  { display: inline; }
