@@ -426,6 +426,10 @@ function applyFormulas() {
         const displayVal = /,\d{2},/.test(origText) ? fmtInr(result) :
                            (typeof result === 'string' ? result : fmt(result, 2));
         td.innerHTML = `<span class="fx-num">${displayVal}</span><span class="fx-ind" title="${escHtml(entry.formula)}">fx</span>`;
+        // Add fill handle to every formula cell
+        const fh = document.createElement('div');
+        fh.className = 'fx-fill-handle'; fh.title = 'Drag to fill';
+        td.appendChild(fh);
       }
     });
   } catch(e) { console.error('applyFormulas:', e); }
@@ -814,10 +818,187 @@ function fpUseAIFormula(formula) {
   fpApply();
 }
 
+// ── Formula Bar ────────────────────────────────────────────────────────────────
+let _fbActiveCell = null;
+
+function fbBarSync(td) {
+  _fbActiveCell = td || null;
+  const refEl   = document.getElementById('fb-ref');
+  const inp     = document.getElementById('fb-input');
+  const applyBtn = document.getElementById('fb-apply-btn');
+  const clearBtn = document.getElementById('fb-clear-btn');
+  if (!refEl || !inp) return;
+
+  if (!td) {
+    refEl.textContent = '—';
+    inp.value = ''; inp.placeholder = 'Click a cell to view or edit…';
+    inp.classList.remove('fb-has-formula');
+    if (applyBtn) applyBtn.style.display = 'none';
+    if (clearBtn) clearBtn.style.display = 'none';
+    return;
+  }
+
+  refEl.textContent = td.dataset.caddr || '—';
+  const fkey    = td.dataset.fkey;
+  const formula = fkey && FSTORE[fkey] ? FSTORE[fkey].formula : null;
+  if (formula) {
+    inp.value = formula;
+    inp.classList.add('fb-has-formula');
+    if (clearBtn) clearBtn.style.display = '';
+  } else {
+    const fxNum = td.querySelector('.fx-num');
+    const raw   = fxNum ? fxNum.textContent : td.textContent.replace(/fx|!/g, '').trim();
+    inp.value = raw;
+    inp.classList.remove('fb-has-formula');
+    if (clearBtn) clearBtn.style.display = 'none';
+  }
+  if (applyBtn) applyBtn.style.display = '';
+}
+
+function fbBarApply() {
+  if (!_fbActiveCell) return;
+  const raw = (document.getElementById('fb-input')?.value || '').trim();
+  if (!raw) { fbBarClear(); return; }
+  const formula = raw.startsWith('=') ? raw : ('=' + raw);
+  if (raw.startsWith('=')) {
+    const result = _handleFormulaEdit(_fbActiveCell, formula);
+    const eid = +_fbActiveCell.dataset.eid;
+    if (eid && EH[eid] && !EH[eid].isStr) EH[eid].setVal(result !== null ? result : 0);
+  } else {
+    const n = parseFloat(raw);
+    const eid = +_fbActiveCell.dataset.eid;
+    if (eid && EH[eid]) EH[eid].setVal(isNaN(n) ? raw : n);
+  }
+  recompute(); renderAll();
+}
+
+function fbBarClear() {
+  if (!_fbActiveCell) return;
+  const fkey = _fbActiveCell.dataset.fkey;
+  if (fkey) {
+    delete FSTORE[fkey];
+    delete _fbActiveCell.dataset.fkey;
+    _fbActiveCell.classList.remove('formula-cell', 'formula-err');
+  }
+  recompute(); renderAll();
+  fbBarSync(null);
+}
+
+function _initFormulaBar() {
+  const inp = document.getElementById('fb-input'); if (!inp) return;
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter')  { e.preventDefault(); fbBarApply(); }
+    if (e.key === 'Escape') { e.preventDefault(); fbBarSync(_fbActiveCell); inp.blur(); }
+  });
+  // Mark formula bar as having formula when = is typed
+  inp.addEventListener('input', () => {
+    inp.classList.toggle('fb-has-formula', inp.value.startsWith('='));
+  });
+  // Clicking inside the formula bar input should not clear active cell
+  inp.addEventListener('focus', () => {
+    if (_fbActiveCell) inp.classList.toggle('fb-has-formula', inp.value.startsWith('='));
+  });
+}
+
+// ── Fill Handle — drag to copy formula across cells ────────────────────────────
+let _fillSrc = null, _fillDragging = false;
+
+// Adjust relative cell refs by row/col delta; $-prefixed refs stay fixed
+function _shiftFormula(formula, rowDelta, colDelta) {
+  return formula.replace(/(\$?)([A-Za-z]{1,3})(\$?)(\d+)/g, (_, cd, col, rd, row) => {
+    const newCol = cd === '$' ? col.toUpperCase()
+                              : _fColLetter(Math.max(1, _fColNum(col.toUpperCase()) + colDelta));
+    const newRow = rd === '$' ? row : String(Math.max(1, parseInt(row) + rowDelta));
+    return `${cd}${newCol}${rd}${newRow}`;
+  });
+}
+
+function _fillCellsInRange(srcCell, tgtCell) {
+  const table = srcCell.closest('table');
+  if (!table || tgtCell.closest('table') !== table) return;
+  const fkey = srcCell.dataset.fkey;
+  if (!fkey || !FSTORE[fkey]) return;
+  const formula = FSTORE[fkey].formula;
+  const srcAddr = srcCell.dataset.caddr, tgtAddr = tgtCell.dataset.caddr;
+  if (!srcAddr || !tgtAddr) return;
+
+  const sC = _fColNum(srcAddr.match(/[A-Z]+/)[0]), sR = parseInt(srcAddr.match(/\d+/)[0]);
+  const tC = _fColNum(tgtAddr.match(/[A-Z]+/)[0]), tR = parseInt(tgtAddr.match(/\d+/)[0]);
+
+  for (let r = Math.min(sR, tR); r <= Math.max(sR, tR); r++) {
+    for (let c = Math.min(sC, tC); c <= Math.max(sC, tC); c++) {
+      if (r === sR && c === sC) continue;
+      const cell = table.querySelector(`[data-caddr="${_fColLetter(c)}${r}"].ed,[data-caddr="${_fColLetter(c)}${r}"].edcasc`);
+      if (!cell) continue;
+      const newFormula = _shiftFormula(formula, r - sR, c - sC);
+      const cfkey = _fkey(cell);
+      FSTORE[cfkey] = { formula: newFormula };
+      cell.dataset.fkey = cfkey;
+      const result = evalFormula(newFormula, table);
+      if (result !== null) {
+        const eid = +cell.dataset.eid;
+        if (eid && EH[eid] && !EH[eid].isStr) EH[eid].setVal(typeof result === 'number' ? result : parseFloat(result) || 0);
+      }
+    }
+  }
+  recompute(); renderAll();
+  if (typeof fbScheduleSave === 'function') fbScheduleSave();
+}
+
+function _highlightFillRange(srcCell, tgtCell) {
+  document.querySelectorAll('.fill-target').forEach(el => el.classList.remove('fill-target'));
+  const table = srcCell.closest('table');
+  if (!table || !tgtCell || tgtCell.closest('table') !== table) return;
+  const srcAddr = srcCell.dataset.caddr, tgtAddr = tgtCell.dataset.caddr;
+  if (!srcAddr || !tgtAddr) return;
+  const sC = _fColNum(srcAddr.match(/[A-Z]+/)[0]), sR = parseInt(srcAddr.match(/\d+/)[0]);
+  const tC = _fColNum(tgtAddr.match(/[A-Z]+/)[0]), tR = parseInt(tgtAddr.match(/\d+/)[0]);
+  for (let r = Math.min(sR, tR); r <= Math.max(sR, tR); r++) {
+    for (let c = Math.min(sC, tC); c <= Math.max(sC, tC); c++) {
+      if (r === sR && c === sC) continue;
+      const cell = table.querySelector(`[data-caddr="${_fColLetter(c)}${r}"].ed,[data-caddr="${_fColLetter(c)}${r}"].edcasc`);
+      if (cell) cell.classList.add('fill-target');
+    }
+  }
+}
+
+function _fillDragMove(e) {
+  if (!_fillDragging || !_fillSrc) return;
+  const target = document.elementFromPoint(e.clientX, e.clientY)?.closest('td.ed,td.edcasc');
+  _highlightFillRange(_fillSrc, target || _fillSrc);
+}
+
+function _fillDragEnd(e) {
+  document.removeEventListener('mousemove', _fillDragMove, { capture: true });
+  document.removeEventListener('mouseup',   _fillDragEnd,  { capture: true });
+  document.body.classList.remove('fill-dragging');
+  const target = document.elementFromPoint(e.clientX, e.clientY)?.closest('td.ed,td.edcasc');
+  document.querySelectorAll('.fill-target').forEach(el => el.classList.remove('fill-target'));
+  _fillSrc?.classList.remove('fill-src');
+  const src = _fillSrc; _fillSrc = null; _fillDragging = false;
+  if (target && target !== src) _fillCellsInRange(src, target);
+}
+
+function _initFillHandle() {
+  document.addEventListener('mousedown', e => {
+    if (!e.target.classList.contains('fx-fill-handle')) return;
+    e.preventDefault(); e.stopPropagation();
+    const srcCell = e.target.closest('td.formula-cell');
+    if (!srcCell?.dataset.fkey) return;
+    _fillSrc = srcCell; _fillDragging = true;
+    srcCell.classList.add('fill-src');
+    document.body.classList.add('fill-dragging');
+    document.addEventListener('mousemove', _fillDragMove, { capture: true, passive: true });
+    document.addEventListener('mouseup',   _fillDragEnd,  { capture: true });
+  }, { capture: true });
+}
+
 // ── Init ───────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   _fpHoverInit();
   _initImplicitPicker();
+  _initFormulaBar();
+  _initFillHandle();
 
   // Hydrate API key UI from localStorage
   const saved = getApiKey();

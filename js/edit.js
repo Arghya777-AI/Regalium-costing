@@ -70,6 +70,7 @@ function cancelEdit() {
   activeCell.innerHTML = activeCellOrig;
   activeCell = null; activeCellOrig = '';
   if (row) row.style.height = '';
+  if (typeof fbBarSync === 'function') fbBarSync(null);
   _applyPendingFbRender();
 }
 
@@ -91,6 +92,9 @@ function activateCell(cell) {
 
   activeCellOrig = cell.innerHTML;
   activeCell = cell;
+
+  // Sync formula bar with this cell
+  if (typeof fbBarSync === 'function') fbBarSync(cell);
 
   // Lock the row height so the table layout doesn't shift when cell content changes
   const row = cell.closest('tr');

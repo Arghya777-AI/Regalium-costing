@@ -61,6 +61,53 @@ body { font-family: Arial, Helvetica, sans-serif; background: #f0f2f5; color: va
 .fp-key-link  { font-size: 10px; color: #1a56db; text-decoration: none; white-space: nowrap; }
 .fp-key-link:hover { text-decoration: underline; }
 
+/* ── FORMULA BAR ── */
+.formula-bar {
+  position: sticky; top: 52px; z-index: 89;
+  display: flex; align-items: center; height: 32px; gap: 0;
+  background: #fff; border-bottom: 1.5px solid var(--border);
+  padding: 0; font-size: 13px; flex-shrink: 0;
+}
+.fb-ref {
+  min-width: 64px; padding: 0 10px; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; letter-spacing: .3px; color: var(--dark);
+  border-right: 1.5px solid var(--border); background: #f8f9fa; cursor: default;
+}
+.fb-sep { width: 1.5px; background: var(--border); height: 100%; }
+.fb-fx-label {
+  padding: 0 10px; font-size: 12px; font-style: italic; font-weight: 600;
+  color: #1565C0; border-right: 1.5px solid var(--border); height: 100%;
+  display: flex; align-items: center;
+}
+.fb-input {
+  flex: 1; border: none; outline: none; padding: 0 10px;
+  font-family: 'Consolas', 'Courier New', monospace; font-size: 13px;
+  color: var(--text); background: transparent; height: 100%; caret-color: #1565C0;
+}
+.fb-input:focus { background: #f0f6ff; }
+.fb-input.fb-has-formula { color: #1565C0; font-style: italic; }
+.fb-apply-btn, .fb-clear-btn {
+  height: 100%; padding: 0 10px; border: none; cursor: pointer;
+  font-size: 14px; font-weight: 700; transition: background .15s;
+}
+.fb-apply-btn { color: var(--green); background: #f0fff4; }
+.fb-apply-btn:hover { background: #c6f6d5; }
+.fb-clear-btn { color: var(--red); background: #fff5f5; }
+.fb-clear-btn:hover { background: #fed7d7; }
+
+/* ── FILL HANDLE ── */
+.fx-fill-handle {
+  position: absolute; right: -1px; bottom: -1px;
+  width: 7px; height: 7px; background: #1565C0;
+  cursor: crosshair; z-index: 5; border: 1px solid #fff;
+  box-shadow: 0 0 0 1px #1565C0;
+}
+.formula-cell { position: relative; }
+.fill-src    { outline: 2px solid #1565C0 !important; outline-offset: -2px; }
+.fill-target { background: rgba(21,101,192,0.12) !important; outline: 1px dashed #1565C0; outline-offset: -1px; }
+body.fill-dragging * { user-select: none; }
+
 /* ── TABS ── */
 .tabs-wrap { background: var(--navy); padding: 0 24px; overflow-x: auto; display: flex; gap: 0; white-space: nowrap; }
 .tabs-wrap::-webkit-scrollbar { height: 4px; }

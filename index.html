@@ -68,6 +68,16 @@
   </button>
 </div>
 
+<!-- FORMULA BAR -->
+<div id="formula-bar" class="formula-bar">
+  <div id="fb-ref" class="fb-ref" title="Cell address">—</div>
+  <div class="fb-sep"></div>
+  <span class="fb-fx-label">fx</span>
+  <input id="fb-input" class="fb-input" type="text" autocomplete="off" spellcheck="false" placeholder="Click a cell to view or edit…" />
+  <button id="fb-apply-btn" class="fb-apply-btn" title="Apply (Enter)" style="display:none" onclick="fbBarApply()">✓</button>
+  <button id="fb-clear-btn" class="fb-clear-btn" title="Clear formula" style="display:none" onclick="fbBarClear()">✕</button>
+</div>
+
 <!-- Firebase loading overlay — hidden after first Firestore snapshot -->
 <div id="fb-loading-overlay">
   <div class="fb-spinner"></div>
