@@ -861,9 +861,8 @@ function fbBarApply() {
   if (!_fbActiveCell) return;
   const raw = (document.getElementById('fb-input')?.value || '').trim();
   if (!raw) { fbBarClear(); return; }
-  const formula = raw.startsWith('=') ? raw : ('=' + raw);
   if (raw.startsWith('=')) {
-    const result = _handleFormulaEdit(_fbActiveCell, formula);
+    const result = _handleFormulaEdit(_fbActiveCell, raw);
     const eid = +_fbActiveCell.dataset.eid;
     if (eid && EH[eid] && !EH[eid].isStr) EH[eid].setVal(result !== null ? result : 0);
   } else {
@@ -872,6 +871,7 @@ function fbBarApply() {
     if (eid && EH[eid]) EH[eid].setVal(isNaN(n) ? raw : n);
   }
   recompute(); renderAll();
+  fbBarSync(null);
 }
 
 function fbBarClear() {
@@ -993,6 +993,8 @@ function _fillDragEnd(e) {
 
 function _initFxIndClick() {
   document.addEventListener('click', e => {
+    // Don't intercept badge clicks while the formula panel's cell picker is active
+    if (_fImplicit || _pickerActive || _fDragStart) return;
     const badge = e.target.closest('.fx-ind');
     if (!badge) return;
     e.stopPropagation(); e.preventDefault();

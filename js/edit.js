@@ -75,7 +75,18 @@ function cancelEdit() {
 }
 
 document.addEventListener('mousedown', e => {
-  if (activeCell && !activeCell.contains(e.target)) cancelEdit();
+  if (!activeCell || activeCell.contains(e.target)) return;
+  // Clicking the formula-bar input: close inline edit but keep _fbActiveCell
+  // so the user can finish typing their formula there and press Enter to commit.
+  if (e.target.id === 'fb-input') {
+    const row = activeCell._lockedRow;
+    activeCell.innerHTML = activeCellOrig;
+    activeCell = null; activeCellOrig = '';
+    if (row) row.style.height = '';
+    _applyPendingFbRender();
+    return;
+  }
+  cancelEdit();
 });
 
 document.addEventListener('click', e => {
