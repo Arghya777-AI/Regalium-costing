@@ -293,52 +293,63 @@ function _fmtCancelPainter() {
   document.getElementById('fmt-mini-paint')?.classList.remove('fmt-btn-active');
 }
 
-// ── Mini floating toolbar (appears near selected cell) ────────────────────────
-let _fmtMiniBar = null;
+// ── Mini floating toolbar (appears above/below selected cell) ─────────────────
+let _fmtMiniBar   = null;
+let _fmtMiniTimer = null;
 
 function _fmtShowMiniBar() {
+  clearTimeout(_fmtMiniTimer);
   const keys = [...(_fmtSelKeys.size ? _fmtSelKeys : (_fmtAnchorKey ? [_fmtAnchorKey] : []))];
+  if (!keys.length) { if (_fmtMiniBar) _fmtMiniBar.style.display = 'none'; return; }
 
-  // Build once
-  if (!_fmtMiniBar) {
-    _fmtMiniBar = document.createElement('div');
-    _fmtMiniBar.id = 'fmt-mini-bar';
-    _fmtMiniBar.className = 'fmt-mini-bar';
-    _fmtMiniBar.innerHTML =
-      `<button class="fmt-btn" id="fmt-mini-bold" title="Bold (Ctrl+B)" onclick="fmtToggleBold()"><b>B</b></button>` +
-      `<button class="fmt-btn fmt-color-trigger" id="fmt-mini-textbtn" title="Text color" onclick="fmtOpenPalette('text',this)"><span class="fmt-color-icon fmt-mini-text-icon">A</span><span class="fmt-arr">&#9660;</span></button>` +
-      `<button class="fmt-btn fmt-color-trigger" id="fmt-mini-fillbtn" title="Fill color" onclick="fmtOpenPalette('bg',this)"><span class="fmt-color-icon fmt-mini-fill-icon">&#9632;</span><span class="fmt-arr">&#9660;</span></button>` +
-      `<button id="fmt-mini-paint" class="fmt-btn" title="Format Painter: copy this cell's style, then click another cell" onclick="fmtCopyPaint()">&#x1F58C;</button>` +
-      `<button class="fmt-btn fmt-clear-btn" title="Clear formatting" onclick="fmtClear()">&#10005;</button>`;
-    document.body.appendChild(_fmtMiniBar);
-  }
+  // Small delay so activateCell() runs first — hide if a cell opened for editing
+  _fmtMiniTimer = setTimeout(() => {
+    if (typeof isEditActive === 'function' && isEditActive()) return;
 
-  if (!keys.length) { _fmtMiniBar.style.display = 'none'; return; }
+    // Build once
+    if (!_fmtMiniBar) {
+      _fmtMiniBar = document.createElement('div');
+      _fmtMiniBar.id = 'fmt-mini-bar';
+      _fmtMiniBar.className = 'fmt-mini-bar';
+      _fmtMiniBar.innerHTML =
+        `<button class="fmt-btn" id="fmt-mini-bold" title="Bold (Ctrl+B)" onclick="fmtToggleBold()"><b>B</b></button>` +
+        `<button class="fmt-btn fmt-color-trigger" id="fmt-mini-textbtn" title="Text color" onclick="fmtOpenPalette('text',this)"><span class="fmt-color-icon fmt-mini-text-icon">A</span><span class="fmt-arr">&#9660;</span></button>` +
+        `<button class="fmt-btn fmt-color-trigger" id="fmt-mini-fillbtn" title="Fill color" onclick="fmtOpenPalette('bg',this)"><span class="fmt-color-icon fmt-mini-fill-icon">&#9632;</span><span class="fmt-arr">&#9660;</span></button>` +
+        `<button id="fmt-mini-paint" class="fmt-btn" title="Format Painter: copy this cell's style, then click another cell" onclick="fmtCopyPaint()">&#x1F58C;</button>` +
+        `<button class="fmt-btn fmt-clear-btn" title="Clear formatting" onclick="fmtClear()">&#10005;</button>`;
+      document.body.appendChild(_fmtMiniBar);
+    }
 
-  const anchorTd = _fmtAnchorKey ? _tdByKey(_fmtAnchorKey) : null;
-  if (!anchorTd) { _fmtMiniBar.style.display = 'none'; return; }
+    const anchorTd = _fmtAnchorKey ? _tdByKey(_fmtAnchorKey) : null;
+    if (!anchorTd) { _fmtMiniBar.style.display = 'none'; return; }
 
-  const rect = anchorTd.getBoundingClientRect();
-  if (!rect.width) { _fmtMiniBar.style.display = 'none'; return; }
+    const rect = anchorTd.getBoundingClientRect();
+    if (!rect.width || rect.bottom < 0 || rect.top > window.innerHeight) {
+      _fmtMiniBar.style.display = 'none'; return;
+    }
 
-  const barW = 180;
-  let left = rect.left + window.scrollX;
-  if (left + barW > window.innerWidth - 8) left = window.innerWidth - barW - 8;
-  _fmtMiniBar.style.left = Math.max(4, left) + 'px';
-  _fmtMiniBar.style.top  = (rect.bottom + window.scrollY + 4) + 'px';
-  _fmtMiniBar.style.display = 'flex';
+    // position: fixed — use viewport coords (no scrollX/Y needed)
+    const BAR_H = 34, barW = 180;
+    // Prefer above the cell; fall back to below if not enough room
+    let top = rect.top - BAR_H - 6;
+    if (top < 55) top = rect.bottom + 4;
+    let left = rect.left;
+    if (left + barW > window.innerWidth - 8) left = window.innerWidth - barW - 8;
 
-  // Sync bold state
-  const allBold = keys.every(k => CFORMAT[k]?.bold);
-  document.getElementById('fmt-mini-bold')?.classList.toggle('fmt-btn-active', allBold);
-  document.getElementById('fmt-mini-paint')?.classList.toggle('fmt-btn-active', _fmtPainterActive);
+    _fmtMiniBar.style.left    = Math.max(4, left) + 'px';
+    _fmtMiniBar.style.top     = top + 'px';
+    _fmtMiniBar.style.display = 'flex';
 
-  // Sync colour indicators
-  const firstFmt = CFORMAT[keys[0]] || {};
-  const textIcon = _fmtMiniBar.querySelector('.fmt-mini-text-icon');
-  const fillIcon = _fmtMiniBar.querySelector('.fmt-mini-fill-icon');
-  if (textIcon) textIcon.style.borderBottomColor = firstFmt.color || '#212529';
-  if (fillIcon) fillIcon.style.color             = firstFmt.bg    || '#e0a020';
+    const allBold = keys.every(k => CFORMAT[k]?.bold);
+    document.getElementById('fmt-mini-bold')?.classList.toggle('fmt-btn-active', allBold);
+    document.getElementById('fmt-mini-paint')?.classList.toggle('fmt-btn-active', _fmtPainterActive);
+
+    const firstFmt = CFORMAT[keys[0]] || {};
+    const textIcon = _fmtMiniBar.querySelector('.fmt-mini-text-icon');
+    const fillIcon = _fmtMiniBar.querySelector('.fmt-mini-fill-icon');
+    if (textIcon) textIcon.style.borderBottomColor = firstFmt.color || '#212529';
+    if (fillIcon) fillIcon.style.color             = firstFmt.bg    || '#e0a020';
+  }, 60);
 }
 
 // ── Init: event listeners ─────────────────────────────────────────────────────
@@ -411,6 +422,14 @@ function _initFormatting() {
       _fmtHighlight();
     }
   });
+
+  // Hide mini bar on scroll/resize — it will reappear on next cell click
+  const _hideMiniOnScroll = () => {
+    clearTimeout(_fmtMiniTimer);
+    if (_fmtMiniBar) _fmtMiniBar.style.display = 'none';
+  };
+  window.addEventListener('scroll',  _hideMiniOnScroll, { passive: true, capture: true });
+  window.addEventListener('resize',  _hideMiniOnScroll, { passive: true });
 }
 
 document.addEventListener('DOMContentLoaded', _initFormatting);

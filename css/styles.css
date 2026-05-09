@@ -165,9 +165,9 @@ td.fmt-selected, th.fmt-selected {
   background: rgba(21, 101, 192, 0.07) !important;
 }
 
-/* Mini floating toolbar */
+/* Mini floating toolbar — fixed so it doesn't overlap table rows */
 .fmt-mini-bar {
-  position: absolute; z-index: 9995;
+  position: fixed; z-index: 9995;
   background: #fff; border: 1px solid #d0d0d0;
   border-radius: 7px; padding: 2px 4px;
   box-shadow: 0 4px 18px rgba(0,0,0,.18);
