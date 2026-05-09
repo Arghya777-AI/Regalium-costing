@@ -15,6 +15,7 @@ const TUI = {
 
 // Per-tbody data registry — direct links to D arrays for row insert/delete
 const TREG = {
+  'tbl-overall-body':  { arr: () => D.os.rows,             blank: () => ({ sno: D.os.rows.length + 1, label: 'New Item', init: null, curDirect: null, expFixed: null }) },
   'tbl-mepf-body':     { arr: () => D.mepf.rows,          blank: () => ({ sno: '—', label: 'New Item', amt: 0, status: 'Pending', cls: 'pending' }) },
   'tbl-facade-body':   { arr: () => D.facade.rows,         blank: () => ({ sno: '—', type: '', desc: 'New Item', qty: 1, rate: 0 }) },
   'tbl-park-body':     { arr: () => D.parking.rows,        blank: () => ({ sno: '—', label: 'New Item', unit: 'LS', qty: 1, rate: 0 }) },
@@ -872,7 +873,7 @@ function _positionFmlPop(pop, anchor) {
 
 // Assign data-didx to rows in every registered tbody
 function _assignDidx() {
-  const SKIP = new Set(['total-row', 'committed-sep', 'note-row', 'group-header']);
+  const SKIP = new Set(['total-row', 'committed-sep', 'note-row', 'group-header', 'os-comp-row']);
   Object.keys(TREG).forEach(tbid => {
     const tbody = document.getElementById(tbid); if (!tbody) return;
     let didx = 0;

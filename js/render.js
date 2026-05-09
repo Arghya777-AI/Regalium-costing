@@ -146,6 +146,8 @@ function renderOverview() {
     const expCell = _expEdCell(r);
 
     const tr = document.createElement('tr');
+    // Rows 14 & 15 are computed (not in D.os.rows) — mark so _assignDidx skips them
+    if (!osRow) tr.classList.add('os-comp-row');
     tr.innerHTML = `<td class="ctr">${r.sno}</td>${labelCell}${initCell}${curCell}<td class="num">${diffFmt(diff)}</td>${expCell}`;
     tb.appendChild(tr);
 
