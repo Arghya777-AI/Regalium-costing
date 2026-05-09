@@ -227,7 +227,8 @@ function _colMenu(e, th) {
       const arr = TUI.extraCols[tbid];
       const col = arr?.find(c => c.id === th.dataset.ecid);
       if (col) arr.splice(arr.indexOf(col), 1);
-      applyTableOps();
+      recompute(); renderAll(); applyTableOps();
+      if (typeof fbScheduleSave === 'function') fbScheduleSave();
     }} : null,
     '—',
     !isExtra ? { icon: isHidden ? '👁' : '🙈', label: isHidden ? 'Show Column' : 'Hide Column', fn: () => _toggleHideCol(tbid, cidx) } : null,
@@ -1097,6 +1098,9 @@ function _injectExtraCols() {
     const dataRows = Array.from(tbody.querySelectorAll(':scope > tr'));
 
     cols.forEach(col => {
+      // Skip if already injected (applyTableOps may be called multiple times)
+      if (headTr.querySelector(`[data-ecid="${col.id}"]`)) return;
+
       // Header cell
       const th = document.createElement('th');
       th.className = 'tui-extra-th';
