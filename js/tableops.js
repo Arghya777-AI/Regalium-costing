@@ -9,6 +9,7 @@ const TUI = {
   hiddenTabs: new Set(),
   customTabs: [],      // [{id, name, notes}]
   extraCols: {},       // tbodyId → [{id, label, cells:{rowKey:value}}]
+  colOrder: {},        // tbodyId → [cidx, ...] in desired display order
   hiddenElements: {},  // hideId → true  (KPI cards, table cards, chart cards)
 };
 
@@ -32,6 +33,7 @@ const TREG = {
 // ── Row drag-and-drop reorder ─────────────────────────────────────────────────
 let _dragRow     = null;  // { tbid, fromDidx }
 let _dhActive    = false; // true while mousedown is on a drag handle
+let _dragColSrc  = null;  // { tbid, cidx } for column reorder
 
 function _initRowDrag() {
   const isAdmin = (typeof _fbIsAdmin !== 'undefined') ? _fbIsAdmin : true;
@@ -43,6 +45,9 @@ function _initRowDrag() {
     const table  = tbody.closest('table');
     const headTr = table?.querySelector('thead tr');
     if (!table || !headTr) return;
+
+    // Skip if already injected (standalone applyTableOps without renderAll)
+    if (headTr.querySelector('.tui-dh-th')) return;
 
     // Inject narrow drag-handle column into header
     const thDH = document.createElement('th');
@@ -204,11 +209,12 @@ function _rowMenu(e, tr) {
 
 // ── Column context menu ────────────────────────────────────────────────────────
 function _colMenu(e, th) {
-  const tbid   = th.dataset.tbid;
-  const cidx   = parseInt(th.dataset.cidx ?? '-1');
-  const isHidden = tbid && TUI.hiddenCols[tbid]?.has(cidx);
-  const anyHidden = (TUI.hiddenCols[tbid]?.size || 0) > 0;
-  const isExtra = th.classList.contains('tui-extra-th');
+  const tbid       = th.dataset.tbid;
+  const cidx       = parseInt(th.dataset.cidx ?? '-1');
+  const isHidden   = tbid && TUI.hiddenCols[tbid]?.has(cidx);
+  const anyHidden  = (TUI.hiddenCols[tbid]?.size || 0) > 0;
+  const isExtra    = th.classList.contains('tui-extra-th');
+  const hasOrder   = tbid && TUI.colOrder[tbid]?.length > 0;
 
   _showMenu(e, [
     !isExtra ? { icon: '◁+', label: 'Insert Column Left',  fn: () => _addCol(tbid, cidx - 1) } : null,
@@ -222,6 +228,12 @@ function _colMenu(e, th) {
     '—',
     !isExtra ? { icon: isHidden ? '👁' : '🙈', label: isHidden ? 'Show Column' : 'Hide Column', fn: () => _toggleHideCol(tbid, cidx) } : null,
     anyHidden ? { icon: '👁', label: `Show All Columns (${TUI.hiddenCols[tbid].size} hidden)`, fn: () => _showAllCols(tbid) } : null,
+    hasOrder  ? '—' : null,
+    hasOrder  ? { icon: '↺', label: 'Reset Column Order', fn: () => {
+      delete TUI.colOrder[tbid];
+      recompute(); renderAll(); applyTableOps();
+      if (typeof fbScheduleSave === 'function') fbScheduleSave();
+    }} : null,
   ]);
 }
 
@@ -307,6 +319,113 @@ function _toggleHideCol(tbid, cidx) {
 }
 
 function _showAllCols(tbid) { delete TUI.hiddenCols[tbid]; applyTableOps(); }
+
+// ── Column drag-and-drop reorder ───────────────────────────────────────────────
+
+// Physically reorder native columns in every row of the table according to
+// TUI.colOrder[tbid]. Called after all other column transforms (hide, inject, etc).
+function _applyColOrder() {
+  Object.entries(TUI.colOrder || {}).forEach(([tbid, order]) => {
+    if (!order || order.length < 2) return;
+    const tbody = document.getElementById(tbid);
+    const table = tbody?.closest('table');
+    if (!table) return;
+
+    table.querySelectorAll('tr').forEach(tr => {
+      // Native cells: have data-cidx, not extra-col, not drag-handle
+      const natives = Array.from(tr.children).filter(el =>
+        el.dataset.cidx &&
+        !el.classList.contains('tui-extra-th') &&
+        !el.classList.contains('tui-extra-td')
+      );
+      if (natives.length < 2) return;
+
+      const cellMap = {};
+      natives.forEach(cell => { cellMap[cell.dataset.cidx] = cell; });
+
+      // Insertion anchor: before extra-cols (or append)
+      const anchor = tr.querySelector('.tui-extra-th, .tui-extra-td') || null;
+      natives.forEach(cell => cell.remove());
+
+      const placed = new Set();
+      order.forEach(cidx => {
+        const cell = cellMap[String(cidx)];
+        if (!cell) return;
+        anchor ? tr.insertBefore(cell, anchor) : tr.appendChild(cell);
+        placed.add(String(cidx));
+      });
+      // Re-append any new columns not yet in stored order
+      natives.forEach(cell => {
+        if (!placed.has(cell.dataset.cidx)) {
+          anchor ? tr.insertBefore(cell, anchor) : tr.appendChild(cell);
+        }
+      });
+    });
+  });
+}
+
+// Wire up drag-to-reorder on column headers. Uses data-col-drag-init guard so
+// listeners are attached only once per element lifetime.
+function _initColDrag() {
+  const isAdmin = (typeof _fbIsAdmin !== 'undefined') ? _fbIsAdmin : true;
+  if (!isAdmin) return;
+
+  document.querySelectorAll('thead tr').forEach(headTr => {
+    const table = headTr.closest('table');
+    const tbid  = table?.querySelector('tbody[id]')?.id;
+    if (!tbid || !TREG[tbid]) return;
+
+    Array.from(headTr.querySelectorAll('th[data-cidx]')).forEach(th => {
+      if (th.dataset.colDragInit) return;  // already wired
+      th.dataset.colDragInit = '1';
+      th.draggable = true;
+      th.classList.add('tui-col-draggable');
+
+      th.addEventListener('dragstart', e => {
+        e.stopPropagation();
+        _dragColSrc = { tbid, cidx: parseInt(th.dataset.cidx) };
+        e.dataTransfer.effectAllowed = 'move';
+        th.classList.add('tui-col-dragging');
+      });
+      th.addEventListener('dragend', () => {
+        _dragColSrc = null;
+        th.classList.remove('tui-col-dragging');
+        headTr.querySelectorAll('.tui-col-drop').forEach(el => el.classList.remove('tui-col-drop'));
+      });
+      th.addEventListener('dragover', e => {
+        if (!_dragColSrc || _dragColSrc.tbid !== tbid) return;
+        e.preventDefault();
+        e.stopPropagation();
+        headTr.querySelectorAll('.tui-col-drop').forEach(el => el.classList.remove('tui-col-drop'));
+        th.classList.add('tui-col-drop');
+      });
+      th.addEventListener('drop', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!_dragColSrc || _dragColSrc.tbid !== tbid) return;
+        const fromCidx = _dragColSrc.cidx;
+        const toCidx   = parseInt(th.dataset.cidx);
+        if (fromCidx === toCidx) return;
+
+        // Seed order from current DOM sequence if not yet stored
+        if (!TUI.colOrder[tbid]) {
+          TUI.colOrder[tbid] = Array.from(headTr.querySelectorAll('th[data-cidx]'))
+            .map(h => parseInt(h.dataset.cidx));
+        }
+        const order    = TUI.colOrder[tbid];
+        const fromIdx  = order.indexOf(fromCidx);
+        const toIdx    = order.indexOf(toCidx);
+        if (fromIdx < 0 || toIdx < 0) return;
+        const [removed] = order.splice(fromIdx, 1);
+        order.splice(toIdx, 0, removed);
+
+        _dragColSrc = null;
+        _applyColOrder();                                     // instant visual
+        if (typeof fbScheduleSave === 'function') fbScheduleSave();
+      });
+    });
+  });
+}
 
 function _addCol(tbid, afterCidx) {
   const label = prompt('Column name:', 'New Column'); if (!label) return;
@@ -438,6 +557,8 @@ function applyTableOps() {
   _applyHiddenCols();
   _injectExtraCols();
   _initRowDrag();
+  _applyColOrder();
+  _initColDrag();
   _addTableActionBars();
   _updateTabBar();
   if (typeof assignCellAddrs          === 'function') assignCellAddrs();
@@ -770,13 +891,17 @@ function _assignDidx() {
   });
 }
 
-// Assign data-cidx to all th and td cells (1-based, tracks original column position)
+// Assign data-cidx to all th and td cells (1-based, original column position).
+// Skips cells that already have cidx (preserves values after column reordering)
+// and skips injected helper cells (drag-handle, extra columns).
 function _assignCidx() {
   document.querySelectorAll('table').forEach(tbl => {
     const tbodyId = tbl.querySelector('tbody')?.id || '';
     tbl.querySelectorAll('thead tr').forEach(tr => {
       Array.from(tr.children).forEach((th, i) => {
-        if (!th.classList.contains('tui-extra-th')) {
+        if (!th.classList.contains('tui-extra-th') &&
+            !th.classList.contains('tui-dh-th') &&
+            !th.dataset.cidx) {
           th.dataset.cidx = String(i + 1);
           th.dataset.tbid = tbodyId;
         }
@@ -784,7 +909,11 @@ function _assignCidx() {
     });
     tbl.querySelectorAll('tbody > tr, tfoot > tr').forEach(tr => {
       Array.from(tr.children).forEach((td, i) => {
-        if (!td.classList.contains('tui-extra-td')) td.dataset.cidx = String(i + 1);
+        if (!td.classList.contains('tui-extra-td') &&
+            !td.classList.contains('tui-dh-td') &&
+            !td.dataset.cidx) {
+          td.dataset.cidx = String(i + 1);
+        }
       });
     });
   });

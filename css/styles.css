@@ -260,6 +260,12 @@ tr:hover .tui-del-row { display: inline; }
 .tui-row-dragging  { opacity: 0.35; background: #e8f4fd !important; }
 .tui-drop-target   { outline: 2px solid var(--gold); outline-offset: -2px; background: #fffde7 !important; }
 
+/* ── Column drag-and-drop ── */
+.tui-col-draggable         { cursor: grab; }
+.tui-col-draggable:active  { cursor: grabbing; }
+.tui-col-dragging          { opacity: 0.45; background: #e8f4fd !important; }
+.tui-col-drop              { outline: 3px solid var(--gold); outline-offset: -2px; background: #fffde7 !important; }
+
 .tui-extra-th { background: #f5f5dc !important; color: var(--dark) !important; font-size: 11px !important; font-weight: 600 !important; padding: 7px 10px !important; border: 1px solid #e0e0a0 !important; min-width: 80px; outline: none; cursor: text; }
 .tui-extra-th:focus { background: #fffde7 !important; box-shadow: inset 0 0 0 2px var(--gold); }
 .tui-extra-td { padding: 6px 8px; border: 1px solid #ececd0; vertical-align: middle; background: rgba(255,255,200,0.25); min-width: 80px; outline: none; cursor: text; font-size: 12px; text-align: right; }

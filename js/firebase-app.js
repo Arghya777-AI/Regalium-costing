@@ -279,6 +279,9 @@ function _fbApplyTUI(remote) {
   if (remote.hiddenElements) {
     TUI.hiddenElements = JSON.parse(JSON.stringify(remote.hiddenElements));
   }
+  if (remote.colOrder) {
+    TUI.colOrder = JSON.parse(JSON.stringify(remote.colOrder));
+  }
 }
 
 function _tuiToJSON() {
@@ -288,7 +291,8 @@ function _tuiToJSON() {
     hiddenTabs:     [...TUI.hiddenTabs],
     extraCols:      JSON.parse(JSON.stringify(TUI.extraCols      || {})),
     customTabs:     JSON.parse(JSON.stringify(TUI.customTabs     || [])),
-    hiddenElements: JSON.parse(JSON.stringify(TUI.hiddenElements || {}))
+    hiddenElements: JSON.parse(JSON.stringify(TUI.hiddenElements || {})),
+    colOrder:       JSON.parse(JSON.stringify(TUI.colOrder       || {}))
   };
 }
 
