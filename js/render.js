@@ -94,6 +94,27 @@ function _curEdCell(r, dec = 1) {
   return edCell(getCur, v => { osRow.curDirect = v; }, { dec });
 }
 
+// Shared helper: editable diff cell — editing sets curDirect = init − newDiff.
+// Preserves the +/− colour display (diffFmt) while being click-to-edit.
+function _diffEdCell(r, dec = 1) {
+  const osRow = D.os.rows.find(x => x.sno === r.sno);
+  if (!osRow) return `<td class="num">${diffFmt((r.init || 0) - (r.cur || 0))}</td>`;
+  const id = ++EI;
+  const getDiff = () => {
+    const cr = C.osRowsFull.find(x => x.sno === r.sno);
+    return (osRow.init || 0) - (cr ? (cr.cur || 0) : 0);
+  };
+  EH[id] = {
+    getVal: getDiff,
+    setVal: v => { osRow.curDirect = (osRow.init || 0) - v; },
+    isStr:  false,
+    cascade: null
+  };
+  const val  = getDiff();
+  const disp = val == null ? '—' : diffFmt(val);
+  return `<td class="num ed" data-eid="${id}">${disp}</td>`;
+}
+
 // ── OVERALL SUMMARY ───────────────────────────────────────────────────────────
 // ── Overview per-cell note helpers (global so onclick= survives innerHTML round-trips) ──
 // col = 'sno' | 'label' | 'init' | 'cur' | 'diff' | 'exp'
@@ -165,7 +186,7 @@ function renderOverview() {
 
     const tr = document.createElement('tr');
     if (!osRow) tr.classList.add('os-comp-row');
-    tr.innerHTML = `${snoCell}${labelCell}${initCell}${curCell}<td class="num">${diffFmt(diff)}</td>${expCell}`;
+    tr.innerHTML = `${snoCell}${labelCell}${initCell}${curCell}${_diffEdCell(r, 1)}${expCell}`;
     tb.appendChild(tr);
 
     // Inject per-cell note div under numeric columns only (not sno/label/diff)
@@ -222,7 +243,7 @@ function renderSummary2() {
       tr.innerHTML = `<td class="ctr">${r.sno}</td><td style="font-weight:600">${escHtml(r.label)}</td>`
         + _initEdCell(r)
         + _curEdCell(r)
-        + `<td class="num">${diffFmt(diff)}</td>`
+        + _diffEdCell(r)
         + _expEdCell(r)
         + `<td class="num">${isLast ? `<strong>${fmt(sub, 1)}</strong>` : '—'}</td>`;
       tb.appendChild(tr);
@@ -258,7 +279,7 @@ function renderSummary3() {
       tr.innerHTML = `<td class="ctr">${r.sno}</td><td style="font-weight:600">${escHtml(r.label)}</td>`
         + _initEdCell(r)
         + _curEdCell(r)
-        + `<td class="num">${diffFmt(diff)}</td>`
+        + _diffEdCell(r)
         + _expEdCell(r)
         + `<td style="font-size:10px;color:var(--muted)">${noteStr}</td>`;
       tb.appendChild(tr);
