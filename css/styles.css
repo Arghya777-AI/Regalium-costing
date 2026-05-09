@@ -108,6 +108,46 @@ body { font-family: Arial, Helvetica, sans-serif; background: #f0f2f5; color: va
 .fill-target { background: rgba(21,101,192,0.12) !important; outline: 1px dashed #1565C0; outline-offset: -1px; }
 body.fill-dragging * { user-select: none; }
 
+/* ── FORMATTING TOOLBAR (right side of formula bar) ── */
+.fmt-toolbar { display: flex; align-items: center; gap: 2px; padding: 0 6px; flex-shrink: 0; }
+.fmt-toolbar-sep { width: 1.5px; height: 20px; background: var(--border); margin: 0 4px; }
+.fmt-btn {
+  height: 24px; min-width: 24px; padding: 0 5px;
+  border: 1px solid transparent; border-radius: 4px;
+  cursor: pointer; font-size: 13px; background: transparent;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .1s, border-color .1s; color: var(--text);
+}
+.fmt-btn:hover { background: #f0f0f0; border-color: #ccc; }
+.fmt-btn.fmt-btn-active { background: #e3edff; border-color: #1565C0; color: #1565C0; }
+.fmt-clear-btn { font-size: 10px; color: var(--muted); }
+.fmt-clear-btn:hover { color: var(--red); border-color: var(--red); background: #fff5f5; }
+
+/* Color picker wraps: transparent native input overlaid on icon */
+.fmt-color-wrap {
+  position: relative; height: 24px; min-width: 24px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid transparent; border-radius: 4px; cursor: pointer;
+}
+.fmt-color-wrap:hover { background: #f0f0f0; border-color: #ccc; }
+.fmt-color-picker {
+  position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%;
+  cursor: pointer; padding: 0; border: none;
+}
+.fmt-color-icon {
+  font-size: 12px; font-weight: 800; pointer-events: none;
+  line-height: 1; user-select: none;
+}
+.fmt-text-icon { color: var(--text); border-bottom: 3px solid #212529; padding-bottom: 1px; }
+.fmt-fill-icon { color: #e0a020; font-size: 14px; }
+
+/* Selected cell highlight */
+td.fmt-selected {
+  outline: 2px solid #1565C0 !important;
+  outline-offset: -2px;
+  background: rgba(21, 101, 192, 0.07) !important;
+}
+
 /* ── TABS ── */
 .tabs-wrap { background: var(--navy); padding: 0 24px; overflow-x: auto; display: flex; gap: 0; white-space: nowrap; }
 .tabs-wrap::-webkit-scrollbar { height: 4px; }

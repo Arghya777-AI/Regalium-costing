@@ -80,9 +80,10 @@ function fbStartSync() {
         (_activeBtn?.getAttribute('onclick') || '').match(/showTab\(['"]([^'"]+)['"]/)?.[1];
       try {
         const data = snap.data();
-        if (data.D)      _fbApplyD(data.D);
-        if (data.FSTORE) _fbApplyFSTORE(data.FSTORE);
-        if (data.TUI)    _fbApplyTUI(data.TUI);
+        if (data.D)       _fbApplyD(data.D);
+        if (data.FSTORE)  _fbApplyFSTORE(data.FSTORE);
+        if (data.TUI)     _fbApplyTUI(data.TUI);
+        if (data.CFORMAT) _fbApplyCFORMAT(data.CFORMAT);
         // Always enforce branding — overrides whatever Firestore has stored
         D.project.name     = 'Regalium';
         D.project.subtitle = 'CONSTRUCTION COST DASHBOARD';
@@ -168,6 +169,7 @@ async function fbSave() {
         D:         JSON.parse(JSON.stringify(D)),
         FSTORE:    JSON.parse(JSON.stringify(FSTORE)),
         TUI:       _tuiToJSON(),
+        CFORMAT:   JSON.parse(JSON.stringify(CFORMAT)),
         updatedBy: _fbUser?.email || _fbUser?.displayName || 'admin',
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
@@ -217,6 +219,7 @@ async function fbSaveView(name) {
       D:         JSON.parse(JSON.stringify(D)),
       FSTORE:    JSON.parse(JSON.stringify(FSTORE)),
       TUI:       _tuiToJSON(),
+      CFORMAT:   JSON.parse(JSON.stringify(CFORMAT)),
       savedBy:   _fbUser?.email || _fbUser?.displayName || 'admin',
       savedAt:   firebase.firestore.FieldValue.serverTimestamp()
     });
@@ -233,9 +236,10 @@ async function fbLoadView(viewId) {
   if (!v) return;
   _fbReceiving = true;
   try {
-    if (v.D)      _fbApplyD(v.D);
-    if (v.FSTORE) _fbApplyFSTORE(v.FSTORE);
-    if (v.TUI)    _fbApplyTUI(v.TUI);
+    if (v.D)       _fbApplyD(v.D);
+    if (v.FSTORE)  _fbApplyFSTORE(v.FSTORE);
+    if (v.TUI)     _fbApplyTUI(v.TUI);
+    if (v.CFORMAT) _fbApplyCFORMAT(v.CFORMAT);
     recompute();
     renderAll();
     if (typeof kbToast === 'function') kbToast(`✓ Loaded "${v.name}"`);
@@ -288,6 +292,12 @@ function _fbApplyD(remote) {
 function _fbApplyFSTORE(remote) {
   Object.keys(FSTORE).forEach(k => delete FSTORE[k]);
   Object.assign(FSTORE, remote);
+}
+
+function _fbApplyCFORMAT(remote) {
+  if (typeof CFORMAT === 'undefined') return;
+  Object.keys(CFORMAT).forEach(k => delete CFORMAT[k]);
+  Object.assign(CFORMAT, remote);
 }
 
 function _fbApplyTUI(remote) {

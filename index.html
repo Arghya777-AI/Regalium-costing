@@ -76,6 +76,20 @@
   <input id="fb-input" class="fb-input" type="text" autocomplete="off" spellcheck="false" placeholder="Click a cell to view or edit…" />
   <button id="fb-apply-btn" class="fb-apply-btn" title="Apply (Enter)" style="display:none" onclick="fbBarApply()">✓</button>
   <button id="fb-clear-btn" class="fb-clear-btn" title="Clear formula" style="display:none" onclick="fbBarClear()">✕</button>
+  <!-- Formatting toolbar -->
+  <div class="fmt-toolbar">
+    <div class="fmt-toolbar-sep"></div>
+    <button id="fmt-bold-btn" class="fmt-btn" title="Bold (Ctrl+B)" onclick="fmtToggleBold()"><b>B</b></button>
+    <span class="fmt-color-wrap" title="Text color">
+      <input type="color" id="fmt-color-in" class="fmt-color-picker" value="#212529" oninput="fmtSetColor(this.value)">
+      <span class="fmt-color-icon fmt-text-icon" title="Text color">A</span>
+    </span>
+    <span class="fmt-color-wrap" title="Fill color">
+      <input type="color" id="fmt-bg-in" class="fmt-color-picker" value="#ffffff" oninput="fmtSetBg(this.value)">
+      <span class="fmt-color-icon fmt-fill-icon" title="Fill color">&#9632;</span>
+    </span>
+    <button class="fmt-btn fmt-clear-btn" title="Clear all formatting from selection" onclick="fmtClear()">✕</button>
+  </div>
 </div>
 
 <!-- Firebase loading overlay — hidden after first Firestore snapshot -->
@@ -533,6 +547,7 @@
 <script src="js/tab-builder.js"></script>
 <script src="js/keyboard.js"></script>
 <script src="js/formula.js"></script>
+<script src="js/format.js"></script>
 <!-- FOOTER -->
 <footer class="dash-footer">
   <div class="dash-footer-inner">

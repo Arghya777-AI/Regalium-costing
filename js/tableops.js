@@ -708,6 +708,7 @@ function applyTableOps() {
   _updateTabBar();
   if (typeof assignCellAddrs          === 'function') assignCellAddrs();
   if (typeof applyFormulas            === 'function') applyFormulas();
+  if (typeof applyFormatting          === 'function') applyFormatting();
   if (typeof tbAddChartBtns           === 'function') tbAddChartBtns();
   if (typeof _tbAssignBuiltinKpiRefs  === 'function') _tbAssignBuiltinKpiRefs();
   if (typeof _tbAddKpiInfoBadges      === 'function') _tbAddKpiInfoBadges();
