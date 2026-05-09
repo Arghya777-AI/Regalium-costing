@@ -97,7 +97,14 @@ function fbStartSync() {
             showTab(_activeTabId.replace(/^tui_/, 'tui_'), targetBtn);
           }
         }
-        const who = data.updatedBy ? ` · ${data.updatedBy}` : '';
+        const updBy  = data.updatedBy || '';
+        const meId   = window._amUser?.email || window._amUser?.displayName || '';
+        const whoRaw = updBy && updBy !== meId ? updBy : '';
+        // Show first name or local-part only (e.g. "ashik" from "ashik.raheem@...")
+        const whoShort = whoRaw.includes('@')
+          ? whoRaw.split('@')[0].split('.')[0]
+          : whoRaw.split(' ')[0];
+        const who = whoShort ? ` · ${whoShort} edited` : '';
         fbRenderStatus('online', who);
       } finally {
         _fbReceiving = false;

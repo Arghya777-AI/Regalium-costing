@@ -29,6 +29,117 @@ const TREG = {
   'tbl-mep-body':      { arr: () => D.mepCostplan,         blank: () => ({ code: '', label: 'New Item', init: null, r2: null, r3: null, r4: null, r5: null, internal: null, consultant: null, rmk: '', level: 'S' }) },
 };
 
+// ── Row drag-and-drop reorder ─────────────────────────────────────────────────
+let _dragRow     = null;  // { tbid, fromDidx }
+let _dhActive    = false; // true while mousedown is on a drag handle
+
+function _initRowDrag() {
+  const isAdmin = (typeof _fbIsAdmin !== 'undefined') ? _fbIsAdmin : true;
+  if (!isAdmin) return;
+
+  Object.keys(TREG).forEach(tbid => {
+    const tbody = document.getElementById(tbid);
+    if (!tbody) return;
+    const table  = tbody.closest('table');
+    const headTr = table?.querySelector('thead tr');
+    if (!table || !headTr) return;
+
+    // Inject narrow drag-handle column into header
+    const thDH = document.createElement('th');
+    thDH.className = 'tui-dh-th';
+    headTr.insertBefore(thDH, headTr.firstChild);
+
+    // Process every row in the tbody
+    Array.from(tbody.querySelectorAll(':scope > tr')).forEach(tr => {
+      const didx = parseInt(tr.dataset.didx ?? '-1');
+      const tdDH = document.createElement('td');
+      tdDH.className = 'tui-dh-td';
+
+      if (didx >= 0) {
+        tdDH.innerHTML =
+          `<span class="tui-dh" title="Drag to reorder">⠿</span>` +
+          `<span class="tui-del-row" title="Delete row">✕</span>`;
+
+        // Delete button
+        tdDH.querySelector('.tui-del-row').addEventListener('click', e => {
+          e.stopPropagation();
+          if (!confirm('Delete this row?')) return;
+          TREG[tbid].arr().splice(didx, 1);
+          if (TUI.hiddenRows[tbid]) {
+            const next = new Set();
+            TUI.hiddenRows[tbid].forEach(d => {
+              if (d < didx) next.add(d); else if (d > didx) next.add(d - 1);
+            });
+            TUI.hiddenRows[tbid] = next;
+          }
+          recompute(); renderAll(); applyTableOps();
+          if (typeof fbScheduleSave === 'function') fbScheduleSave();
+        });
+
+        // Drag handle — set flag so dragstart knows it's intentional
+        tdDH.querySelector('.tui-dh').addEventListener('mousedown', () => { _dhActive = true; });
+
+        // Row drag events
+        tr.draggable = true;
+        tr.addEventListener('dragstart', e => {
+          if (!_dhActive) { e.preventDefault(); return; }
+          _dragRow = { tbid, fromDidx: didx };
+          e.dataTransfer.effectAllowed = 'move';
+          requestAnimationFrame(() => tr.classList.add('tui-row-dragging'));
+        });
+        tr.addEventListener('dragend', () => {
+          _dhActive = false;
+          _dragRow  = null;
+          tr.classList.remove('tui-row-dragging');
+          tbody.querySelectorAll('.tui-drop-target').forEach(r => r.classList.remove('tui-drop-target'));
+        });
+        tr.addEventListener('dragover', e => {
+          if (!_dragRow || _dragRow.tbid !== tbid) return;
+          e.preventDefault();
+          tbody.querySelectorAll('.tui-drop-target').forEach(r => r.classList.remove('tui-drop-target'));
+          tr.classList.add('tui-drop-target');
+        });
+        tr.addEventListener('drop', e => {
+          e.preventDefault();
+          if (!_dragRow || _dragRow.tbid !== tbid) return;
+          const toDidx   = parseInt(tr.dataset.didx ?? '-1');
+          const fromDidx = _dragRow.fromDidx;
+          if (toDidx < 0 || toDidx === fromDidx) return;
+          const arr = TREG[tbid].arr();
+          const [removed] = arr.splice(fromDidx, 1);
+          arr.splice(toDidx, 0, removed);
+          _remapHiddenAfterMove(tbid, fromDidx, toDidx);
+          _dragRow = null;
+          recompute(); renderAll(); applyTableOps();
+          if (typeof fbScheduleSave === 'function') fbScheduleSave();
+        });
+      }
+
+      tr.insertBefore(tdDH, tr.firstChild);
+    });
+
+    // Keep alignment in tfoot rows
+    Array.from(table.querySelectorAll('tfoot tr')).forEach(tr => {
+      const td = document.createElement('td');
+      td.className = 'tui-dh-td';
+      tr.insertBefore(td, tr.firstChild);
+    });
+  });
+}
+
+function _remapHiddenAfterMove(tbid, from, to) {
+  const hidden = TUI.hiddenRows[tbid];
+  if (!hidden || !hidden.size) return;
+  const next = new Set();
+  hidden.forEach(d => {
+    if      (d === from)                      next.add(to);
+    else if (from < to && d > from && d <= to) next.add(d - 1);
+    else if (from > to && d >= to && d < from) next.add(d + 1);
+    else                                        next.add(d);
+  });
+  TUI.hiddenRows[tbid] = next;
+}
+
 // ── Context menu ───────────────────────────────────────────────────────────────
 let _cmEl = null;
 
@@ -326,6 +437,7 @@ function applyTableOps() {
   _applyHiddenRows();
   _applyHiddenCols();
   _injectExtraCols();
+  _initRowDrag();
   _addTableActionBars();
   _updateTabBar();
   if (typeof assignCellAddrs          === 'function') assignCellAddrs();
@@ -867,6 +979,9 @@ function _updateTabBar() {
 
 // ── One-time init (called from DOMContentLoaded) ───────────────────────────────
 function initTableOps() {
+  // Reset drag-handle flag whenever mouse is released (handles click-without-drag)
+  document.addEventListener('mouseup', () => { _dhActive = false; });
+
   // Delegated right-click for rows and column headers
   document.querySelector('.content').addEventListener('contextmenu', e => {
     const tr = e.target.closest('tbody > tr');
