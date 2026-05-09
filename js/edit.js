@@ -66,8 +66,10 @@ function _applyPendingFbRender() {
 
 function cancelEdit() {
   if (!activeCell) return;
+  const row = activeCell._lockedRow;
   activeCell.innerHTML = activeCellOrig;
   activeCell = null; activeCellOrig = '';
+  if (row) row.style.height = '';
   _applyPendingFbRender();
 }
 
@@ -89,6 +91,13 @@ function activateCell(cell) {
 
   activeCellOrig = cell.innerHTML;
   activeCell = cell;
+
+  // Lock the row height so the table layout doesn't shift when cell content changes
+  const row = cell.closest('tr');
+  if (row) {
+    activeCell._lockedRow = row;
+    row.style.height = row.getBoundingClientRect().height + 'px';
+  }
 
   // If cell has a stored formula, show formula text for editing
   const existingFormula = (typeof FSTORE !== 'undefined' && cell.dataset.fkey)
@@ -123,13 +132,22 @@ function activateCell(cell) {
   input.addEventListener('blur', () => {
     if (!activeCell) return;  // already cancelled
     const raw = input.value.trim();
+    const lockedRow = activeCell._lockedRow;  // capture before nulling activeCell
     activeCell = null;
-    if (raw === '') { cancelEdit(); return; }
+
+    if (raw === '') {
+      // Restore cell content and release height lock
+      cell.innerHTML = activeCellOrig;
+      activeCellOrig = '';
+      if (lockedRow) lockedRow.style.height = '';
+      return;
+    }
 
     // Formula detection: = prefix triggers formula system
     if (!handler.isStr && raw.startsWith('=') && typeof _handleFormulaEdit === 'function') {
       const result = _handleFormulaEdit(cell, raw);
       handler.setVal(result !== null ? result : 0);
+      if (lockedRow) lockedRow.style.height = '';
       recompute(); renderAll();
       return;
     }
@@ -139,7 +157,12 @@ function activateCell(cell) {
       newVal = raw;
     } else {
       newVal = parseFloat(raw);
-      if (isNaN(newVal)) { cancelEdit(); return; }
+      if (isNaN(newVal)) {
+        cell.innerHTML = activeCellOrig;
+        activeCellOrig = '';
+        if (lockedRow) lockedRow.style.height = '';
+        return;
+      }
     }
 
     // If this cell has a cascade config and qty+rate exist, show dialog
@@ -147,11 +170,13 @@ function activateCell(cell) {
       const c = handler.cascade;
       const qty = c.getQty(), rate = c.getRate(), oldAmt = c.getOldAmt();
       if (qty && rate && oldAmt !== newVal) {
+        if (lockedRow) lockedRow.style.height = '';
         showCascadeDialog({ c, newAmt: newVal, qty, rate, oldAmt });
         return;
       }
     }
 
+    if (lockedRow) lockedRow.style.height = '';
     handler.setVal(newVal);
     recompute();
     renderAll();

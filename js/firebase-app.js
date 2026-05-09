@@ -102,8 +102,13 @@ function fbStartSync() {
           window._fbPendingTabId  = _activeTabId;
           fbRenderStatus('online', (who || '') + ' · pending');
         } else {
+          // Mark active panel so the CSS fade-in hides any layout flash during rebuild
+          const _syncPanel = document.querySelector('.tab-panel.active');
+          if (_syncPanel) _syncPanel.classList.add('fb-syncing');
+
           recompute();
           renderAll();
+
           // Restore the previously-active tab after re-render
           if (_activeTabId) {
             const targetBtn = document.querySelector(
@@ -113,6 +118,10 @@ function fbStartSync() {
               showTab(_activeTabId.replace(/^tui_/, 'tui_'), targetBtn);
             }
           }
+          // Remove sync class after the animation completes
+          requestAnimationFrame(() =>
+            document.querySelectorAll('.fb-syncing').forEach(el => el.classList.remove('fb-syncing'))
+          );
           fbRenderStatus('online', who);
         }
       } finally {
