@@ -31,9 +31,8 @@ const TREG = {
 };
 
 // ── Row drag-and-drop reorder ─────────────────────────────────────────────────
-let _dragRow     = null;  // { tbid, fromDidx }
-let _dhActive    = false; // true while mousedown is on a drag handle
-let _dragColSrc  = null;  // { tbid, cidx } for column reorder
+let _dragRow    = null;  // { tbid, fromDidx }
+let _dragColSrc = null;  // { tbid, cidx } for column reorder
 
 function _initRowDrag() {
   const isAdmin = (typeof _fbIsAdmin !== 'undefined') ? _fbIsAdmin : true;
@@ -61,43 +60,29 @@ function _initRowDrag() {
       tdDH.className = 'tui-dh-td';
 
       if (didx >= 0) {
+        // The ⠿ span is draggable="true" — NOT the whole <tr>.
+        // This avoids conflicts with contenteditable cells and is more reliable
+        // across browsers. Firefox also requires setData() to be called.
         tdDH.innerHTML =
-          `<span class="tui-dh" title="Drag to reorder">⠿</span>` +
+          `<span class="tui-dh" draggable="true" title="Drag to reorder">⠿</span>` +
           `<span class="tui-del-row" title="Delete row">✕</span>`;
 
-        // Delete button
-        tdDH.querySelector('.tui-del-row').addEventListener('click', e => {
-          e.stopPropagation();
-          if (!confirm('Delete this row?')) return;
-          TREG[tbid].arr().splice(didx, 1);
-          if (TUI.hiddenRows[tbid]) {
-            const next = new Set();
-            TUI.hiddenRows[tbid].forEach(d => {
-              if (d < didx) next.add(d); else if (d > didx) next.add(d - 1);
-            });
-            TUI.hiddenRows[tbid] = next;
-          }
-          recompute(); renderAll(); applyTableOps();
-          if (typeof fbScheduleSave === 'function') fbScheduleSave();
-        });
+        const handle = tdDH.querySelector('.tui-dh');
 
-        // Drag handle — set flag so dragstart knows it's intentional
-        tdDH.querySelector('.tui-dh').addEventListener('mousedown', () => { _dhActive = true; });
-
-        // Row drag events
-        tr.draggable = true;
-        tr.addEventListener('dragstart', e => {
-          if (!_dhActive) { e.preventDefault(); return; }
+        // Drag events on the handle span
+        handle.addEventListener('dragstart', e => {
           _dragRow = { tbid, fromDidx: didx };
           e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', `${tbid}:${didx}`); // required for Firefox
           requestAnimationFrame(() => tr.classList.add('tui-row-dragging'));
         });
-        tr.addEventListener('dragend', () => {
-          _dhActive = false;
-          _dragRow  = null;
+        handle.addEventListener('dragend', () => {
+          _dragRow = null;
           tr.classList.remove('tui-row-dragging');
           tbody.querySelectorAll('.tui-drop-target').forEach(r => r.classList.remove('tui-drop-target'));
         });
+
+        // <tr> as the drop target
         tr.addEventListener('dragover', e => {
           if (!_dragRow || _dragRow.tbid !== tbid) return;
           e.preventDefault();
@@ -115,6 +100,22 @@ function _initRowDrag() {
           arr.splice(toDidx, 0, removed);
           _remapHiddenAfterMove(tbid, fromDidx, toDidx);
           _dragRow = null;
+          recompute(); renderAll(); applyTableOps();
+          if (typeof fbScheduleSave === 'function') fbScheduleSave();
+        });
+
+        // Delete button
+        tdDH.querySelector('.tui-del-row').addEventListener('click', e => {
+          e.stopPropagation();
+          if (!confirm('Delete this row?')) return;
+          TREG[tbid].arr().splice(didx, 1);
+          if (TUI.hiddenRows[tbid]) {
+            const next = new Set();
+            TUI.hiddenRows[tbid].forEach(d => {
+              if (d < didx) next.add(d); else if (d > didx) next.add(d - 1);
+            });
+            TUI.hiddenRows[tbid] = next;
+          }
           recompute(); renderAll(); applyTableOps();
           if (typeof fbScheduleSave === 'function') fbScheduleSave();
         });
@@ -1108,9 +1109,6 @@ function _updateTabBar() {
 
 // ── One-time init (called from DOMContentLoaded) ───────────────────────────────
 function initTableOps() {
-  // Reset drag-handle flag whenever mouse is released (handles click-without-drag)
-  document.addEventListener('mouseup', () => { _dhActive = false; });
-
   // Delegated right-click for rows and column headers
   document.querySelector('.content').addEventListener('contextmenu', e => {
     const tr = e.target.closest('tbody > tr');

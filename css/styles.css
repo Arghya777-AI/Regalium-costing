@@ -251,11 +251,11 @@ td.edcasc:hover::after { opacity: 1; }
 /* ── Row drag-and-drop ── */
 .tui-dh-th  { width: 32px !important; min-width: 32px !important; padding: 0 !important; border: none !important; background: transparent !important; }
 .tui-dh-td  { width: 32px; min-width: 32px; padding: 0 !important; text-align: center; vertical-align: middle; white-space: nowrap; }
-.tui-dh     { display: none; cursor: grab; color: #b0b8c4; font-size: 14px; padding: 3px 2px; line-height: 1; user-select: none; }
+.tui-dh     { display: inline; cursor: grab; color: #d1d5db; font-size: 15px; padding: 3px 2px; line-height: 1; user-select: none; }
 .tui-del-row{ display: none; cursor: pointer; color: #d1d5db; font-size: 11px; font-weight: 700; padding: 3px 2px; line-height: 1; }
-tr:hover .tui-dh      { display: inline; }
+tr:hover .tui-dh      { color: #94a3b8; }
 tr:hover .tui-del-row { display: inline; }
-.tui-dh:hover      { color: #64748b; }
+.tui-dh:hover      { color: #475569 !important; }
 .tui-del-row:hover { color: #ef4444; }
 .tui-row-dragging  { opacity: 0.35; background: #e8f4fd !important; }
 .tui-drop-target   { outline: 2px solid var(--gold); outline-offset: -2px; background: #fffde7 !important; }
