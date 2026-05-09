@@ -126,8 +126,8 @@ body.fill-dragging * { user-select: none; }
 .fmt-color-icon {
   font-size: 12px; font-weight: 800; line-height: 1; user-select: none;
 }
-.fmt-text-icon, .fmt-mini-text-icon { color: var(--text); border-bottom: 3px solid #212529; padding-bottom: 1px; }
-.fmt-fill-icon, .fmt-mini-fill-icon { color: #e0a020; font-size: 14px; }
+.fmt-text-icon { color: var(--text); border-bottom: 3px solid #212529; padding-bottom: 1px; }
+.fmt-fill-icon { color: #e0a020; font-size: 14px; }
 .fmt-arr { font-size: 7px; opacity: .55; line-height: 1; }
 
 /* ── Color palette dropdown ── */
@@ -165,15 +165,6 @@ td.fmt-selected, th.fmt-selected {
   background: rgba(21, 101, 192, 0.07) !important;
 }
 
-/* Mini floating toolbar — fixed so it doesn't overlap table rows */
-.fmt-mini-bar {
-  position: fixed; z-index: 9995;
-  background: #fff; border: 1px solid #d0d0d0;
-  border-radius: 7px; padding: 2px 4px;
-  box-shadow: 0 4px 18px rgba(0,0,0,.18);
-  display: none; align-items: center; gap: 2px;
-  pointer-events: auto;
-}
 /* Format Painter cursor mode */
 body.fmt-painter-mode,
 body.fmt-painter-mode td[data-caddr],
