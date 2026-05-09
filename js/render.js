@@ -105,22 +105,60 @@ function _curEdCell(r, dec = 1) {
 }
 
 // ── OVERALL SUMMARY ───────────────────────────────────────────────────────────
+// ── Overview inline-note helpers (global so onclick= survives innerHTML round-trips) ──
+function _ovNoteEdit(el, e) {
+  e.stopPropagation();   // don't activate the parent label cell's edit handler
+  if (el.contentEditable === 'true') return;
+  el.contentEditable = 'true';
+  el.focus();
+  const r = document.createRange(); r.selectNodeContents(el);
+  window.getSelection().removeAllRanges(); window.getSelection().addRange(r);
+}
+function _ovNoteBlur(el) {
+  el.contentEditable = 'false';
+  const sno = +el.dataset.sno || el.dataset.sno;
+  const txt = el.textContent.trim();
+  if (!D.os.notes) D.os.notes = {};
+  if (txt) D.os.notes[sno] = txt;
+  else     delete D.os.notes[sno];
+  el.classList.toggle('os-note-empty', !txt);
+  if (typeof fbScheduleSave === 'function') fbScheduleSave();
+}
+
 function renderOverview() {
   const tb = clearTbody('tbl-overall-body'); if (!tb) return;
-  const notes = {
-    2: 'Current: Finishes 01 (13.3 Cr) + Finishes 02 (63.2 Cr). Expected: 95 Cr',
-    3: 'Façade & landscape lighting 6.5 + Interiors 7.0 + BOH 0.9 = 14.4 Cr',
-    4: 'Current: Alufit 75.5 + SKK 5.9. Expected: Alufit 79.6 + SKK 5.9 = 84.5 Cr',
-  };
 
   C.osRowsFull.forEach(r => {
-    const diff = (r.init || 0) - (r.cur || 0);
+    const diff  = (r.init || 0) - (r.cur || 0);
     const osRow = D.os.rows.find(x => x.sno === r.sno);
 
-    // ── label
-    const labelCell = osRow
-      ? edCell(() => osRow.label, v => { osRow.label = v; }, { isStr: true })
-      : `<td style="font-weight:600">${escHtml(r.label)}</td>`;
+    // ── S No cell: editable display override (doesn't affect internal computation sno)
+    let snoCell;
+    if (osRow) {
+      const snoEid = ++EI;
+      EH[snoEid] = {
+        getVal:  () => osRow.displaySno != null ? String(osRow.displaySno) : String(r.sno),
+        setVal:  v  => { osRow.displaySno = v && v !== String(r.sno) ? v : undefined; },
+        isStr:   true,
+        cascade: null
+      };
+      const snoDisp = osRow.displaySno != null ? escHtml(String(osRow.displaySno)) : r.sno;
+      snoCell = `<td class="ctr ed" data-eid="${snoEid}">${snoDisp}</td>`;
+    } else {
+      snoCell = `<td class="ctr">${r.sno}</td>`;
+    }
+
+    // ── Label cell: label text + inline editable comment
+    let labelCell;
+    if (osRow) {
+      const labelEid = ++EI;
+      EH[labelEid] = { getVal: () => osRow.label, setVal: v => { osRow.label = v; }, isStr: true, cascade: null };
+      const noteText  = (D.os.notes || {})[r.sno] || '';
+      const noteCls   = 'os-note-inline' + (noteText ? '' : ' os-note-empty');
+      labelCell = `<td class="ed" data-eid="${labelEid}">${escHtml(osRow.label)}<div class="${noteCls}" data-sno="${r.sno}" data-placeholder="+ add comment…" onclick="_ovNoteEdit(this,event)" onblur="_ovNoteBlur(this)">${escHtml(noteText)}</div></td>`;
+    } else {
+      labelCell = `<td style="font-weight:600">${escHtml(r.label)}</td>`;
+    }
 
     // ── initial
     let initCell;
@@ -146,16 +184,9 @@ function renderOverview() {
     const expCell = _expEdCell(r);
 
     const tr = document.createElement('tr');
-    // Rows 14 & 15 are computed (not in D.os.rows) — mark so _assignDidx skips them
     if (!osRow) tr.classList.add('os-comp-row');
-    tr.innerHTML = `<td class="ctr">${r.sno}</td>${labelCell}${initCell}${curCell}<td class="num">${diffFmt(diff)}</td>${expCell}`;
+    tr.innerHTML = `${snoCell}${labelCell}${initCell}${curCell}<td class="num">${diffFmt(diff)}</td>${expCell}`;
     tb.appendChild(tr);
-
-    if (notes[r.sno]) {
-      const nr = document.createElement('tr'); nr.className = 'note-row';
-      nr.innerHTML = `<td></td><td></td><td></td><td class="note-cell" colspan="3">${notes[r.sno]}</td>`;
-      tb.appendChild(nr);
-    }
   });
 
   // ── TOTAL row: cascade-editable for init, cur, and exp ──────────────────────

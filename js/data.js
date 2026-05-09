@@ -28,7 +28,12 @@ const D = {
       { sno: 13, label: 'CONSULTANT',                                  init: 32.1,  curDirect: null,        expFixed: null  },
     ],
     contingencyInit: 15.8,
-    labourInit: 3.2
+    labourInit: 3.2,
+    notes: {
+      2: 'Current: Finishes 01 (13.3 Cr) + Finishes 02 (63.2 Cr). Expected: 95 Cr',
+      3: 'Façade & landscape lighting 6.5 + Interiors 7.0 + BOH 0.9 = 14.4 Cr',
+      4: 'Current: Alufit 75.5 + SKK 5.9. Expected: Alufit 79.6 + SKK 5.9 = 84.5 Cr',
+    }
   },
 
   facade: {
