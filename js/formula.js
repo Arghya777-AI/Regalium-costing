@@ -468,6 +468,8 @@ function _fpHoverInit() {
 
   document.addEventListener('mouseover', e => {
     if (_pickerActive || _fDragging) return;
+    // Don't hide the tip when mouse enters the tip itself
+    if (e.target.closest('#formula-tip')) return;
     const cell = e.target.closest('td[data-caddr], th[data-caddr]');
     if (!cell) { _hideTip(); return; }
     clearTimeout(_tipTimer);
@@ -898,6 +900,16 @@ function _initFormulaBar() {
   inp.addEventListener('focus', () => {
     if (_fbActiveCell) inp.classList.toggle('fb-has-formula', inp.value.startsWith('='));
   });
+
+  // fx label in formula bar → open formula panel for active cell
+  const fxLabel = document.querySelector('.fb-fx-label');
+  if (fxLabel) {
+    fxLabel.style.cursor = 'pointer';
+    fxLabel.title = 'Open formula editor';
+    fxLabel.addEventListener('click', () => {
+      if (_fbActiveCell) openFormulaPanel(_fbActiveCell);
+    });
+  }
 }
 
 // ── Fill Handle — drag to copy formula across cells ────────────────────────────
@@ -979,6 +991,16 @@ function _fillDragEnd(e) {
   if (target && target !== src) _fillCellsInRange(src, target);
 }
 
+function _initFxIndClick() {
+  document.addEventListener('click', e => {
+    const badge = e.target.closest('.fx-ind');
+    if (!badge) return;
+    e.stopPropagation(); e.preventDefault();
+    const td = badge.closest('td[data-caddr]');
+    if (td) openFormulaPanel(td);
+  }, true);
+}
+
 function _initFillHandle() {
   document.addEventListener('mousedown', e => {
     if (!e.target.classList.contains('fx-fill-handle')) return;
@@ -998,6 +1020,7 @@ document.addEventListener('DOMContentLoaded', () => {
   _fpHoverInit();
   _initImplicitPicker();
   _initFormulaBar();
+  _initFxIndClick();
   _initFillHandle();
 
   // Hydrate API key UI from localStorage
