@@ -1090,18 +1090,18 @@ function _applyHiddenCols() {
 
 // Inject user-added extra columns
 function _injectExtraCols() {
+  // Always wipe previously-injected elements first so re-injection is always clean
+  // (renderAll() rebuilds tbody rows but leaves thead intact, causing mismatches)
+  document.querySelectorAll('.tui-extra-th, .tui-extra-td').forEach(el => el.remove());
+
   Object.entries(TUI.extraCols).forEach(([tbid, cols]) => {
     if (!cols.length) return;
     const tbody = document.getElementById(tbid);
     const table = tbody?.closest('table'); if (!table) return;
     const headTr = table.querySelector('thead tr'); if (!headTr) return;
-    const dataRows = Array.from(tbody.querySelectorAll(':scope > tr'));
 
     cols.forEach(col => {
-      // Skip if already injected (applyTableOps may be called multiple times)
-      if (headTr.querySelector(`[data-ecid="${col.id}"]`)) return;
-
-      // Header cell
+      // Header — editable label via contentEditable (click to rename)
       const th = document.createElement('th');
       th.className = 'tui-extra-th';
       th.dataset.ecid = col.id;
@@ -1113,15 +1113,37 @@ function _injectExtraCols() {
       const refTh = headTr.querySelector(`[data-cidx="${col.afterCidx}"]`);
       refTh ? refTh.insertAdjacentElement('afterend', th) : headTr.appendChild(th);
 
-      // Body + foot cells
+      // Body + foot cells — registered with EH so click-to-edit works like native cells
       table.querySelectorAll('tbody > tr, tfoot > tr').forEach((tr, pos) => {
         const d = tr.dataset.didx;
         const key = (d !== undefined && d !== '-1') ? `d${d}` : `m${pos}`;
         const td = document.createElement('td');
-        td.className = 'tui-extra-td num';
-        td.contentEditable = 'true';
-        td.textContent = col.cells[key] ?? '';
-        td.oninput = () => { col.cells[key] = td.textContent; };
+
+        if (typeof EI !== 'undefined' && typeof EH !== 'undefined') {
+          const cellEid = ++EI;
+          const getV = () => {
+            const v = col.cells[key];
+            return (v !== undefined && v !== '') ? parseFloat(v) : null;
+          };
+          EH[cellEid] = {
+            getVal: getV,
+            setVal: v => {
+              if (v == null) delete col.cells[key];
+              else col.cells[key] = String(v);
+            },
+            isStr: false,
+            cascade: null
+          };
+          td.className = 'tui-extra-td num ed';
+          td.dataset.eid = String(cellEid);
+          const dv = getV();
+          td.textContent = (dv != null && !isNaN(dv)) ? dv.toFixed(2) : '';
+        } else {
+          td.className = 'tui-extra-td num';
+          td.contentEditable = 'true';
+          td.textContent = col.cells[key] ?? '';
+          td.oninput = () => { col.cells[key] = td.textContent; };
+        }
 
         const refTd = tr.querySelector(`[data-cidx="${col.afterCidx}"]`);
         refTd ? refTd.insertAdjacentElement('afterend', td) : tr.appendChild(td);
