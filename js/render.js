@@ -86,17 +86,12 @@ function _initEdCell(r) {
   return `<td class="num">${r.init != null ? fmt(r.init, 1) : '—'}</td>`;
 }
 
-// Shared helper: editable cur cell for an OS row
+// Shared helper: editable cur cell for an OS row — all rows use direct curDirect override
 function _curEdCell(r, dec = 1) {
   const osRow = D.os.rows.find(x => x.sno === r.sno);
-  if ([1, 8, 11].includes(r.sno) && osRow)
-    return edCell(() => osRow.curDirect, v => { osRow.curDirect = v; }, { dec });
-  if (r.sno === 12 && osRow)
-    return edCell(() => osRow.curDirect, v => { osRow.curDirect = (v || null); }, { dec });
-  const comps = (r.sno !== 14 && r.sno !== 15) ? _curCascComps(r.sno) : null;
-  return comps
-    ? edCascCell(() => r.cur != null ? r.cur : 0, comps, { dec })
-    : `<td class="num derived">${r.cur != null ? fmt(r.cur, dec) : '—'}</td>`;
+  if (!osRow) return `<td class="num">${r.cur != null ? fmt(r.cur, dec) : '—'}</td>`;
+  const getCur = () => { const cr = C.osRowsFull.find(x => x.sno === r.sno); return cr ? cr.cur : null; };
+  return edCell(getCur, v => { osRow.curDirect = v; }, { dec });
 }
 
 // ── OVERALL SUMMARY ───────────────────────────────────────────────────────────
@@ -156,18 +151,14 @@ function renderOverview() {
     if (osRow) initCell = edCell(() => osRow.init, v => { osRow.init = v; }, { dec: 1 });
     else initCell = `<td class="num">${r.init != null ? fmt(r.init, 1) : '—'}</td>`;
 
-    // ── current: direct for rows 1/8/11/12; cascade-editable for sheet-derived rows
-    let curCell;
-    if ([1, 8, 11].includes(r.sno) && osRow) {
-      curCell = edCell(() => osRow.curDirect, v => { osRow.curDirect = v; }, { dec: 2 });
-    } else if (r.sno === 12 && osRow) {
-      curCell = edCell(() => osRow.curDirect, v => { osRow.curDirect = (v || null); }, { dec: 2 });
-    } else {
-      const comps = (r.sno !== 14 && r.sno !== 15) ? _curCascComps(r.sno) : null;
-      curCell = comps
-        ? edCascCell(() => r.cur != null ? r.cur : 0, comps, { dec: 2 })
-        : `<td class="num derived">${r.cur != null ? fmt(r.cur, 2) : '—'}</td>`;
-    }
+    // ── current: all rows directly editable via curDirect override
+    const curCell = osRow
+      ? edCell(
+          () => { const cr = C.osRowsFull.find(x => x.sno === r.sno); return cr ? cr.cur : null; },
+          v  => { osRow.curDirect = v; },
+          { dec: 2 }
+        )
+      : `<td class="num">${r.cur != null ? fmt(r.cur, 2) : '—'}</td>`;
 
     // ── expected: editable for rows 1–13
     const expCell = _expEdCell(r);

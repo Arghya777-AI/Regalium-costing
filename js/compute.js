@@ -69,10 +69,16 @@ function recompute() {
   C.contingencyCur = C.cur13 * 0.026;
   C.labourCur      = C.cur13 * 0.005;
 
-  // Patch rows 14/15 with their percentage-derived cur values (initial pass had cur=0)
+  // Patch rows 14/15: use curDirect if set, otherwise use the percentage-derived value
   C.osRows = C.osRows.map(r => {
-    if (r.sno === 14) return { ...r, cur: C.contingencyCur, exp: r.expFixed ?? C.contingencyCur };
-    if (r.sno === 15) return { ...r, cur: C.labourCur,      exp: r.expFixed ?? C.labourCur };
+    if (r.sno === 14) {
+      const cur = r.curDirect != null ? r.curDirect : C.contingencyCur;
+      return { ...r, cur, exp: r.expFixed ?? cur };
+    }
+    if (r.sno === 15) {
+      const cur = r.curDirect != null ? r.curDirect : C.labourCur;
+      return { ...r, cur, exp: r.expFixed ?? cur };
+    }
     return r;
   });
   C.osRowsFull = C.osRows;
